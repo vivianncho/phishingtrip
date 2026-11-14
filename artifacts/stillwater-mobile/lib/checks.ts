@@ -28,7 +28,7 @@ export function fishCaption(result: CheckResult | null, pending: boolean): strin
   if (!result) return 'One step at a time. Hook is here with you.';
   if (result.outcome === 'official_match') return 'A listed contact, not a guarantee. Take your time.';
   if (result.outcome === 'reports_found') return 'Pause before calling. There’s another way to get help.';
-  return 'Not sure yet. You still have a next step.';
+  return 'Not sure yet. Red means pause—not proof of a scam.';
 }
 
 export function problemText(error: unknown): string {

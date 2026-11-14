@@ -31,6 +31,7 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
   const uncertain = !pending && result?.outcome === 'not_verified';
   const matched = !pending && result?.outcome === 'official_match';
   const reports = !pending && result?.outcome === 'reports_found';
+  const caution = uncertain || reports;
   const art = hookAppearance(result?.outcome, pending);
   return <View style={styles.stage} accessible accessibilityLabel={`Hook the fish. ${fishCaption(result, pending)}`}>
     <View style={styles.water}>
@@ -43,8 +44,8 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
         <SvgXml xml={art.body} width={W} height={H} style={StyleSheet.absoluteFill} />
         <Svg width={W} height={H} viewBox="0 0 480 400" style={StyleSheet.absoluteFill}>
           {uncertain && <Path d="M128 168q15-8 30 2" stroke={c.fishLight} strokeWidth="3" strokeLinecap="round" fill="none" />}
-          <Circle testID="hook-lantern-halo" cx="91" cy="120" r={matched ? 46 : 32} fill={art.glow} opacity={matched ? 0.2 : reports ? 0.22 : 0.12} />
-          <Circle testID="hook-lantern-glow" cx="91" cy="120" r={matched ? 32 : 25} fill={art.glow} opacity={matched ? 0.38 : reports ? 0.2 : 0.1} />
+          <Circle testID="hook-lantern-halo" cx="91" cy="120" r={matched || caution ? 46 : 32} fill={art.glow} opacity={matched || caution ? 0.2 : 0.12} />
+          <Circle testID="hook-lantern-glow" cx="91" cy="120" r={matched || caution ? 32 : 25} fill={art.glow} opacity={matched || caution ? 0.38 : 0.1} />
         </Svg>
         <SvgXml xml={art.lantern} width={W} height={H} style={StyleSheet.absoluteFill} />
         <Svg width={W} height={H} viewBox="0 0 480 400" style={StyleSheet.absoluteFill}>

@@ -59,3 +59,14 @@ green light instead. This supersedes the original sleeping-fish match concept.
 **How to apply:** Use green for an evidence-backed official match only, never
 for missing scam reports or an unknown number. Retain the caller-authentication
 and safety caveats.
+
+Show a red lantern after a **Not verified** result, while keeping the fish's
+body and uncertain expression unchanged.
+
+**Why:** The user explicitly requested red for unverified numbers after the
+absence of live scam data was explained. This overrides the previous neutral
+lantern for that state; it does not change the evidence classification.
+
+**How to apply:** Explain red as “pause—not proof of a scam.” Keep pending,
+empty and reset states neutral, official matches green, and never relabel
+missing evidence as scam reports.

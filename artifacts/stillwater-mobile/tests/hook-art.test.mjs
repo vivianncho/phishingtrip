@@ -41,7 +41,7 @@ test('Hook keeps its real captions and distinct evidence reactions', async t => 
   assert.equal(tree.root.findAllByType('SvgXml').length, 3);
   for (const [outcome, pending, expected, reaction] of [
     ['official_match', false, 'A listed contact, not a guarantee. Take your time.', null],
-    ['not_verified', false, 'Not sure yet. You still have a next step.', 'M128 168q15-8 30 2'],
+    ['not_verified', false, 'Not sure yet. Red means pause—not proof of a scam.', 'M128 168q15-8 30 2'],
     ['reports_found', false, 'Pause before calling. There’s another way to get help.', 'M62 6v65c0 24-29 26-29 7v-9l9 9'],
     [null, true, 'Hook is checking the available evidence…', 'M61 186q-14 24 0 48m-15-62q-23 37 0 76'],
   ]) {
@@ -104,7 +104,7 @@ test('Hook responds to live Reduce Motion changes and cleans up its animation', 
   }
 });
 
-test('Hook turns red for reports, green for official matches, and neutral while uncertain or checking', async t => {
+test('Hook shows a red caution lantern for unverified results, green matches, and neutral pending states', async t => {
   let tree;
   await act(async () => { tree = create(React.createElement(mobile.Hook, { result: null, pending: false })); });
   t.after(async () => { await act(async () => tree.unmount()); });
@@ -114,7 +114,8 @@ test('Hook turns red for reports, green for official matches, and neutral while 
   for (const [outcome, pending, dominantChannel] of [
     ['reports_found', false, 0],
     ['official_match', false, 1],
-    ['not_verified', false, null],
+    ['not_verified', false, 0],
+    ['not_verified', true, null],
     ['reports_found', true, null],
     ['official_match', true, null],
     [null, false, null],
@@ -127,7 +128,11 @@ test('Hook turns red for reports, green for official matches, and neutral while 
     } else {
       assert.notDeepEqual(rendered, neutral);
       // Face details remain legible; every fin, body and lantern paint changes.
-      const paintedLayers = [rendered[0], rendered[1].replace(/<g id="face">[\s\S]*?<\/g>/, ''), rendered[2]];
+      const paintedLayers = outcome === 'not_verified' ? [rendered[2]] : [rendered[0], rendered[1].replace(/<g id="face">[\s\S]*?<\/g>/, ''), rendered[2]];
+      if (outcome === 'not_verified') {
+        assert.deepEqual(rendered.slice(0, 2), neutral.slice(0, 2), 'only the lantern changes for uncertainty');
+        assert.ok(tree.root.findAllByType('Text').some(node => String(node.props.children).includes('not proof of a scam')));
+      }
       for (const xml of paintedLayers) {
         const paints = [...xml.matchAll(/\b(?:fill|stroke)="#([0-9a-f]{6})"/gi)];
         assert.ok(paints.length);

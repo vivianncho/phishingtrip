@@ -35,10 +35,13 @@ function appearance(color?: string) {
 const neutral = appearance();
 const reported = appearance(c.fishReported);
 const matched = appearance(c.fishMatched);
+// A red lantern asks the traveler to pause; it is not a scam classification.
+const unverified = { ...neutral, lantern: reported.lantern, glow: c.fishReported };
 
 export function hookAppearance(outcome?: string, pending = false) {
   if (pending) return neutral;
   if (outcome === 'reports_found') return reported;
   if (outcome === 'official_match') return matched;
+  if (outcome === 'not_verified') return unverified;
   return neutral;
 }

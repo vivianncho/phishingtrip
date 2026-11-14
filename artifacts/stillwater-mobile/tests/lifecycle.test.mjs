@@ -209,6 +209,8 @@ for (const reason of ['COMPANY_MISMATCH', 'NO_EVIDENCE', 'SOURCE_CONFLICT', 'STA
     const a = await h.start();
     await h.resolve(a, result(A, { outcome: 'not_verified', reason, label: 'Not verified' }));
     assert.match(h.text(), /Hook the fish. Not sure yet/);
+    assert.equal(h.find('hook-lantern-glow').props.fill, '#e53e46');
+    assert.match(h.text(), /not proof of a scam/);
     assert.doesNotMatch(h.text(), /A listed contact, not a guarantee/);
     const artwork = h.tree.root.findAllByType('SvgXml').map(node => node.props.xml).join('');
     assert.match(artwork, /id="face"/, 'approved open-eye artwork is present');
