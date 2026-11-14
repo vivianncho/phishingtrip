@@ -1,20 +1,21 @@
 // Stillwater's existing deep-ocean palette, shared with the accepted mockup.
+// Approved Stillwater reference palette (mockup-sandbox Stillwater.css, .sw-figma-ocean).
 const ocean = {
-  text: '#f1f5f9', tint: '#3ef0d8',
-  background: '#0a1628', foreground: '#f1f5f9',
-  card: '#12233d', cardForeground: '#f1f5f9',
-  primary: '#3ef0d8', primaryForeground: '#092b30',
-  secondary: '#192e46', secondaryForeground: '#f1f5f9',
-  muted: '#14253b', mutedForeground: '#97abc3',
-  accent: '#12373d', accentForeground: '#a2ffeb',
-  destructive: '#ff9598', destructiveForeground: '#0a1628',
-  border: '#273a50', input: '#344760',
-  warning: '#f4c77f', overlay: '#00000099',
-  fishLight: '#a2ffeb', fishBody: '#52dbc8', fishDark: '#158b99',
+  text: '#edf7ed', tint: '#d5f995',
+  background: '#07313f', foreground: '#edf7ed',
+  card: '#174854', cardForeground: '#edf7ed',
+  primary: '#d5f995', primaryForeground: '#193e36',
+  secondary: '#123f49', secondaryForeground: '#edf7ed',
+  muted: '#0d3844', mutedForeground: '#b1cfd0',
+  accent: '#1f4f4a', accentForeground: '#d5f995',
+  destructive: '#ff858b', destructiveForeground: '#07313f',
+  border: '#37626b', input: '#4b7a7a',
+  warning: '#ffc98d', overlay: '#00000099',
+  fishLight: '#9dded0', fishBody: '#227079', fishDark: '#123f49', fishGlow: '#dbf6b533',
 };
-// Scroll-linked descent layers, derived from the ocean palette (surface -> abyss).
+// Scroll-linked descent layers: filtered surface light -> deep teal -> abyss.
 export const depth = {
-  sky: '#1d4a66', surface: '#16405c', shallow: '#0f2c47', mid: ocean.background, deep: '#060f1d', abyss: '#030914',
-  ray: '#3ef0d822', rayClear: '#3ef0d800', foam: '#a2ffeb55', bubble: '#a2ffeb40', bubbleRim: '#a2ffeb66', gauge: '#273a50',
+  sky: '#105e66', surface: '#0b4a56', shallow: '#07313f', mid: '#07313f', deep: '#041e30', abyss: '#031928',
+  ray: '#b5f9cc1c', rayClear: '#b5f9cc00', foam: '#b4f3c540', bubble: '#d5f9be30', bubbleRim: '#d5f9be59', gauge: '#37626b',
 };
 export default { light: ocean, dark: ocean, radius: 14 };

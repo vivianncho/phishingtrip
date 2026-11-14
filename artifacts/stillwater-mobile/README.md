@@ -1,7 +1,7 @@
 # Phishing Trip mobile
 
 Expo SDK 58 iPhone-first implementation of Phishing Trip’s accepted visual
-identity: deep ocean, mint accents, DM Sans / Space Grotesk, Hook, and
+identity: deep teal ocean, pale lime accents, DM Sans / Space Grotesk, Hook, and
 Check / Directory / My Trips. The separate mockup is not modified or connected.
 Its invented companies and reports are not copied into the real app.
 
@@ -57,3 +57,20 @@ JavaScript exports. Physical Expo Go / VoiceOver testing has not been performed.
 
 ## Underwater scroll
 `components/Depths.tsx` renders a decorative backdrop behind every `Page`: scrolling sinks from a lit waterline with sun shafts into deep water, with parallax bubbles and a small depth marker. It is scroll-linked and reversible, non-interactive, hidden from accessibility, and colours come from `depth` in `constants/colors.ts`. With Reduce Motion on (checked live), ambient bubble drift and large parallax are disabled; only the colour descent remains.
+
+## Approved Hook artwork
+
+Hook uses the approved canvas fish layers and teal/lime lighting. The four SVG
+layers are bundled as local XML in `components/hookArt.ts` and rendered by the
+installed Expo-supported `react-native-svg` 15.16.0. They do not fetch web URLs,
+depend on the canvas server, or require an SVG transformer. The lantern's
+browser filter is replaced with translucent native SVG glow circles.
+Existing captions, explicit checks and evidence meanings are unchanged.
+
+Artwork verification (2026-11-14): Expo SDK 58 / React Native 0.88.1,
+Node 24.22.1 / pnpm 10.26.1; Expo dependency alignment and Doctor passed;
+mobile tests and typecheck passed; iOS and Android JavaScript exports passed.
+The running Expo browser screen was visually checked at 390 × 844.
+Tests compare every bundled fish path to the approved source and exercise
+result reactions and live Reduce Motion changes. Physical iPhone / Expo Go
+rendering remains unverified; JavaScript exports are not device-test evidence.

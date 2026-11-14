@@ -193,8 +193,11 @@ for (const reason of ['COMPANY_MISMATCH', 'NO_EVIDENCE', 'SOURCE_CONFLICT', 'STA
     await h.resolve(a, result(A, { outcome: 'not_verified', reason, label: 'Not verified' }));
     assert.match(h.text(), /Hook the fish. Not sure yet/);
     assert.doesNotMatch(h.text(), /A listed contact, not a guarantee/);
-    const eye = h.tree.root.findAll(node => node.type === 'Ellipse');
-    assert.ok(eye.some(node => node.props.ry === 13), 'uncertain open eye, not reassuring closed eye');
+    const artwork = h.tree.root.findAllByType('SvgXml').map(node => node.props.xml).join('');
+    assert.match(artwork, /id="face"/, 'approved open-eye artwork is present');
+    const reactions = h.tree.root.findAllByType('Path').map(node => node.props.d);
+    assert.ok(reactions.includes('M128 168q15-8 30 2'), 'uncertain raised brow is present');
+    assert.ok(!reactions.includes('M122 209q21 17 42-2'), 'resting eye is never shown for uncertainty');
   });
 }
 

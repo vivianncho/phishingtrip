@@ -23,6 +23,7 @@ const compiled = await build({
       export { default as CountryScreen } from './app/country';
       export { default as CompanyScreen } from './app/company/[id]';
       export { CompanionProvider, useCompanion } from './context/Companion';
+      export { Hook } from './components/Hook';
       export * from './tests/support/native';
     `,
     resolveDir: app,

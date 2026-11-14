@@ -68,7 +68,7 @@ export const View = 'View', Text = 'Text', TextInput = 'TextInput', Pressable = 
 export function Modal({ visible, children }) { return visible ? <View>{children}</View> : null; }
 export const Ionicons = 'Ionicons';
 export const Svg = 'Svg', Circle = 'Circle', Defs = 'Defs', Ellipse = 'Ellipse', G = 'G',
-  LinearGradient = 'LinearGradient', Path = 'Path', Stop = 'Stop';
+  LinearGradient = 'LinearGradient', Path = 'Path', Stop = 'Stop', SvgXml = 'SvgXml';
 export const s = {};
 export const Copy = Text, Page = View, Providers = 'Providers', Source = 'Source', WebLink = 'WebLink';
 export function Busy({ text }) { return <Text>{text}</Text>; }
