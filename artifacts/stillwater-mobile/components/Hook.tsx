@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Path, SvgXml, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Path, SvgXml } from 'react-native-svg';
 import { hookAppearance } from './hookAppearance';
 import palette from '@/constants/colors';
 import type { CheckResult } from '@workspace/api-client-react';
@@ -29,7 +29,7 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
     return () => animation.stop();
   }, [motion, pending, reduced, result?.outcome]);
   const uncertain = !pending && result?.outcome === 'not_verified';
-  const rest = !pending && result?.outcome === 'official_match';
+  const matched = !pending && result?.outcome === 'official_match';
   const reports = !pending && result?.outcome === 'reports_found';
   const art = hookAppearance(result?.outcome, pending);
   return <View style={styles.stage} accessible accessibilityLabel={`Hook the fish. ${fishCaption(result, pending)}`}>
@@ -42,16 +42,14 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
         </Animated.View>
         <SvgXml xml={art.body} width={W} height={H} style={StyleSheet.absoluteFill} />
         <Svg width={W} height={H} viewBox="0 0 480 400" style={StyleSheet.absoluteFill}>
-          {rest && <G><Ellipse cx="143" cy="209" rx="32" ry="34" fill={art.eyeMask} /><Path d="M122 209q21 17 42-2" stroke={c.fishLight} strokeWidth="3.5" strokeLinecap="round" fill="none" /></G>}
           {uncertain && <Path d="M128 168q15-8 30 2" stroke={c.fishLight} strokeWidth="3" strokeLinecap="round" fill="none" />}
-          <Circle cx="70" cy="112" r="26" fill={art.glow} opacity={reports ? 0.22 : 0.12} />
-          <Circle cx="70" cy="112" r="15" fill={art.glow} opacity={reports ? 0.2 : 0.1} />
+          <Circle testID="hook-lantern-halo" cx="91" cy="120" r={matched ? 46 : 32} fill={art.glow} opacity={matched ? 0.2 : reports ? 0.22 : 0.12} />
+          <Circle testID="hook-lantern-glow" cx="91" cy="120" r={matched ? 32 : 25} fill={art.glow} opacity={matched ? 0.38 : reports ? 0.2 : 0.1} />
         </Svg>
         <SvgXml xml={art.lantern} width={W} height={H} style={StyleSheet.absoluteFill} />
         <Svg width={W} height={H} viewBox="0 0 480 400" style={StyleSheet.absoluteFill}>
           {pending && <G stroke={c.primary} strokeWidth="2" strokeLinecap="round" fill="none"><Path d="M61 186q-14 24 0 48m-15-62q-23 37 0 76" /></G>}
           {reports && <Path d="M62 6v65c0 24-29 26-29 7v-9l9 9" stroke={c.destructive} strokeWidth="3" strokeLinecap="round" fill="none" />}
-          {rest && <G fill={c.primary}><SvgText x="193" y="111" fontSize="17" fontWeight="500">z</SvgText><SvgText x="218" y="87" fontSize="23" fontWeight="500">z</SvgText></G>}
         </Svg>
       </View>
     </Animated.View>

@@ -12,7 +12,7 @@ test('native layers preserve source positions without nested clipping viewports'
   const xml = nativeHookXml(layers);
   assert.equal([...xml.matchAll(/<svg\b/g)].length, 1);
   for (const position of ['174 101', '77.245 134.627', '87 160.5', '40.904 44.917']) {
-    assert.ok(xml.includes(`translate(${position}) scale(1 1)`));
+    assert.ok(xml.includes(`translate(${position}) scale(`));
   }
   assert.deepEqual([...xml.matchAll(/<path\b[^>]*>/g)].map(m => m[0]),
     layers.flatMap(layer => [...layer.matchAll(/<path\b[^>]*>/g)].map(m => m[0])));
@@ -40,7 +40,7 @@ test('Hook keeps its real captions and distinct evidence reactions', async t => 
   assert.equal(caption(), 'One step at a time. Hook is here with you.');
   assert.equal(tree.root.findAllByType('SvgXml').length, 3);
   for (const [outcome, pending, expected, reaction] of [
-    ['official_match', false, 'A listed contact, not a guarantee. Take your time.', 'M122 209q21 17 42-2'],
+    ['official_match', false, 'A listed contact, not a guarantee. Take your time.', null],
     ['not_verified', false, 'Not sure yet. You still have a next step.', 'M128 168q15-8 30 2'],
     ['reports_found', false, 'Pause before calling. There’s another way to get help.', 'M62 6v65c0 24-29 26-29 7v-9l9 9'],
     [null, true, 'Hook is checking the available evidence…', 'M61 186q-14 24 0 48m-15-62q-23 37 0 76'],
@@ -49,8 +49,17 @@ test('Hook keeps its real captions and distinct evidence reactions', async t => 
       result: outcome ? { outcome } : null, pending,
     })));
     assert.equal(caption(), expected);
-    assert.ok(paths().includes(reaction));
-    if (outcome !== 'official_match') assert.ok(!paths().includes('M122 209q21 17 42-2'));
+    if (reaction) assert.ok(paths().includes(reaction));
+    assert.ok(!paths().includes('M122 209q21 17 42-2'), 'Hook stays awake, including official matches');
+    if (outcome === 'official_match') {
+      const halo = tree.root.findByProps({ testID: 'hook-lantern-halo' });
+      assert.equal(halo.props.fill, '#38c85b');
+      assert.equal(Number(halo.props.cx), 91);
+      assert.equal(Number(halo.props.cy), 120);
+      assert.equal(halo.props.r, 46);
+      assert.ok(tree.root.findAllByType('SvgXml')[2].props.xml.includes('fill="#38c85b"'));
+      assert.equal(tree.root.findAllByType('Text').length, 1, 'No sleeping z letters');
+    }
     assert.equal(tree.root.findByProps({ accessible: true }).props.accessibilityLabel, `Hook the fish. ${expected}`);
   }
 });

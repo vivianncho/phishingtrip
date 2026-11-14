@@ -25,7 +25,8 @@ function appearance(color?: string) {
     fins: hookXml([paint(HOOK_FINS)]),
     // Keep the eye and facial details legible instead of tinting the cream whites.
     body: hookXml([paint(HOOK_BODY), HOOK_FACE]),
-    lantern: hookXml([paint(HOOK_LANTERN)]),
+    // A saturated bulb makes the signal visible; retain the original highlight.
+    lantern: hookXml([paint(color ? HOOK_LANTERN.replace('fill="#E9F5B6"', `fill="${color}"`) : HOOK_LANTERN)]),
     glow: color ?? c.primary,
     eyeMask: color ? tint(`<path fill="${c.card}"/>`, color).match(/fill="([^"]+)"/)![1] : c.card,
   };

@@ -49,3 +49,13 @@ Limit the phone country-code picker to the United States, Mexico and Canada.
 **Why:** The user explicitly requested narrowing country area-code selections to those three countries.
 
 **How to apply:** Keep this restriction on country choices; do not infer a request to delete overseas directory records or block explicit international-format numbers.
+
+Hook stays awake for an official-number match; the lantern glows green instead
+of showing closed eyes and sleeping letters.
+
+**Why:** After seeing the sleeping result on an iPhone, the user requested a
+green light instead. This supersedes the original sleeping-fish match concept.
+
+**How to apply:** Use green for an evidence-backed official match only, never
+for missing scam reports or an unknown number. Retain the caller-authentication
+and safety caveats.
