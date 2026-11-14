@@ -1,5 +1,6 @@
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { supportedCountryCodesSql } from "@workspace/db/countries";
 
 // Also works before the original property columns have been pushed. Missing
 // columns use their schema defaults, never inferred locations or identities.
@@ -30,6 +31,9 @@ export async function auditPropertyIdentities(database: Pick<typeof db, "execute
           THEN 'missing city' END,
         CASE WHEN c.listing_type = 'property' AND NOT coalesce(c.country_code ~ '[^[:space:]]', false)
           THEN 'missing country' END,
+        CASE WHEN c.listing_type = 'property' AND coalesce(c.country_code ~ '[^[:space:]]', false)
+          AND c.country_code NOT IN (${supportedCountryCodesSql})
+          THEN 'unsupported country code' END,
         CASE WHEN c.listing_type = 'property' AND NOT EXISTS (
           SELECT 1 FROM identities b WHERE b.id = c.brand_id
             AND b.listing_type = 'brand' AND b.category = 'hotel'

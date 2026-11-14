@@ -7,3 +7,4 @@
 - [Shared limit operations](shared-limit-operations.md) — replicas and provider-key rotations must not create new spend allowances; Basic pricing is not paid-package approval.
 - [Mobile test module identity](mobile-test-module-identity.md) — React Query’s ESM and CommonJS entries have separate contexts; test providers and hooks must use the same entry.
 - [Drizzle integrity updates](drizzle-integrity-updates.md) — schema pushes need ordering and exit-status checks when a self-reference depends on a new unique index.
+- [Property country policy](property-country-policy.md) — imported locations must use canonical codes from the phone checker's supported territory set.

@@ -12,6 +12,9 @@ a unique constraint instead can introduce a truncate-or-preserve prompt even
 with the force flag, which is unsuitable for unattended setup.
 Its introspection can also omit a unique index referenced by a foreign key,
 causing later pushes to attempt recreating an index that already exists.
+The API helper also drops query parameters during composite-primary-key
+introspection; it cannot safely push a schema containing such keys until that
+upstream adapter issue is addressed.
 
 **How to apply:** When changing self-referencing identities, check prerequisite
 index ordering and exercise rejected imports in PostgreSQL. Keep fixes in the

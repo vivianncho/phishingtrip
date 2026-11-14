@@ -2,6 +2,8 @@ import { asc, eq, ilike, and, or, sql, exists, isNull } from "drizzle-orm";
 import { apiDb as db, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
 import { evidenceFreshness, officialProvenance } from "./source-policy";
+import { isSupportedCountry } from "@workspace/db/countries";
+import { ApiFault } from "./policy";
 export { evidenceFreshness } from "./source-policy";
 
 export interface Directory {
@@ -55,6 +57,9 @@ return {
     return { ...identity, contacts };
   },
   async list(search, category, limit, offset, filters = {}) {
+    if (filters.countryCode !== undefined && !isSupportedCountry(filters.countryCode)) {
+      throw new ApiFault(400, "INVALID_COUNTRY", "Use a supported ISO two-letter country.");
+    }
     const escape = (value: string) => value.replace(/[\\%_]/g, "\\$&");
     const pattern = `%${escape(search)}%`;
     // EXISTS preserves one result per exact property even when several aliases

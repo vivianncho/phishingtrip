@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { check, foreignKey, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { supportedCountryCodesSql } from "../countries";
 
 export const companies = pgTable("companies", {
   id: text("id").primaryKey(),
@@ -21,6 +22,7 @@ export const companies = pgTable("companies", {
   ),
 }, (t) => [
   check("companies_listing_type_check", sql`${t.listingType} IN ('organization', 'brand', 'property')`),
+  check("companies_property_country_check", sql`${t.listingType} <> 'property' OR coalesce(${t.countryCode} IN (${supportedCountryCodesSql}), false)`),
   check("companies_property_identity_check", sql`${t.listingType} <> 'property' OR (
     ${t.category} = 'hotel'
     AND coalesce(${t.brandId} ~ '[^[:space:]]', false)

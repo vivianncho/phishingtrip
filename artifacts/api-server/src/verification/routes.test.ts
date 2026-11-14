@@ -21,6 +21,23 @@ function appFor(d: Directory = directory, provider = disabled) {
 }
 after(async () => { await pool.end(); });
 
+test("directory filters use the supported country set before invoking the directory", async () => {
+  const seen: string[] = [];
+  const app = appFor({ ...directory, list: async (_search, _category, _limit, _offset, filters) => {
+    seen.push(filters!.countryCode!);
+    return { items: [], total: 0 };
+  } });
+  for (const countryCode of ["ZZ", "UK", "AQ"]) {
+    const result = await request(app).get("/api/companies").query({ countryCode }).expect(400);
+    assert.equal(result.body.code, "INVALID_COUNTRY");
+  }
+  assert.deepEqual(seen, []);
+  for (const countryCode of ["GB", "JP", "FR", "BR", "ZA", "AU", "XK"]) {
+    await request(app).get("/api/companies").query({ countryCode }).expect(200);
+  }
+  assert.deepEqual(seen, ["GB", "JP", "FR", "BR", "ZA", "AU", "XK"]);
+});
+
 test("health, capabilities and real sourced directory validate against shared schemas", async () => {
   const app = appFor();
   assert.deepEqual((await request(app).get("/api/healthz").expect(200)).body, { status: "ok" });

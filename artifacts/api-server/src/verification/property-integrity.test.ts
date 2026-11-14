@@ -5,6 +5,8 @@ import { db, pool, companies, officialContacts, contactSources } from "@workspac
 import { asc, eq, sql } from "drizzle-orm";
 import { assertPropertyIdentities, auditPropertyIdentities } from "./property-audit";
 import { seedDirectory } from "./seed";
+import { supportedCountryCodes } from "@workspace/db/countries";
+import { directory } from "./directory";
 
 after(async () => { await pool.end(); });
 
@@ -43,6 +45,7 @@ test("direct SQL imports require complete hotel identities and a real hotel bran
       { category: "airline" }, { category: "unknown" },
       ...["brand", "code", "address", "city", "country"].flatMap((key) =>
         [null, "", " \t\n"].map((value) => ({ [key]: value }))),
+      ...["ZZ", "UK", "USA", "us", " US", "US ", "United States", "U1", "ＵＳ", "AQ"].map((country) => ({ country })),
     ];
     for (const change of changes) {
       const v = { ...valid, ...change };
@@ -76,6 +79,7 @@ test("direct SQL imports require complete hotel identities and a real hotel bran
       await rejectsImport(tx, sql`UPDATE companies SET brand_id = ${id} WHERE id = ${property}`, "23503");
     }
     await rejectsImport(tx, sql`UPDATE companies SET city = NULL WHERE id = ${property}`, "23514");
+    await rejectsImport(tx, sql`UPDATE companies SET country_code = 'ZZ' WHERE id = ${property}`, "23514");
     await rejectsImport(tx, sql`UPDATE companies SET listing_type = 'unknown' WHERE id = ${property}`, "23514");
     await rejectsImport(tx, sql`DELETE FROM companies WHERE id = ${brand}`, "23503");
     await rejectsImport(tx, sql`UPDATE companies SET listing_type = 'organization' WHERE id = ${brand}`, "23503");
@@ -106,6 +110,7 @@ test("the pre-constraint audit reports bad imports without modifying or silently
     // Transactional DDL is rolled back with the fixtures; no constraints are
     // removed from the database outside this isolated transaction.
     await tx.execute(sql`ALTER TABLE companies DROP CONSTRAINT companies_property_identity_check`);
+    await tx.execute(sql`ALTER TABLE companies DROP CONSTRAINT companies_property_country_check`);
     await tx.execute(sql`ALTER TABLE companies DROP CONSTRAINT companies_property_brand_fk`);
     const id = `bad-import-${randomUUID()}`;
     await tx.execute(sql`
@@ -122,6 +127,51 @@ test("the pre-constraint audit reports bad imports without modifying or silently
     await assert.rejects(seedDirectory(tx), /Directory identity audit failed/);
     assert.deepEqual(await tx.select().from(companies).where(eq(companies.id, id)), before);
   });
+});
+
+test("all supported international country codes accept direct property imports unchanged", async () => {
+  await rolledBack(async (tx) => {
+    const brand = `international-${randomUUID()}`;
+    await tx.insert(companies).values({
+      id: brand, name: "International fixture", website: "https://fixture.example",
+      category: "hotel", listingType: "brand",
+    });
+    await tx.insert(companies).values(supportedCountryCodes.map((countryCode) => ({
+      id: `${brand}-${countryCode}`, name: "International hotel", website: "https://fixture.example",
+      category: "hotel" as const, listingType: "property" as const, brandId: brand, propertyCode: countryCode,
+      address: "1 Fixture Street", city: "Fixture City", countryCode,
+    })));
+    const rows = await tx.select({ countryCode: companies.countryCode }).from(companies)
+      .where(eq(companies.brandId, brand));
+    assert.deepEqual(rows.map((row) => row.countryCode).sort(), [...supportedCountryCodes]);
+    assert.deepEqual(await auditPropertyIdentities(tx), []);
+  });
+});
+
+test("audit reports unsupported imported countries without changing evidence or review dates", async () => {
+  await rolledBack(async (tx) => {
+    await tx.execute(sql`ALTER TABLE companies DROP CONSTRAINT companies_property_country_check`);
+    const [property] = await tx.select().from(companies).where(eq(companies.listingType, "property")).limit(1);
+    assert.ok(property, "seeded property required");
+    const contacts = await tx.select().from(officialContacts).orderBy(asc(officialContacts.id));
+    const sources = await tx.select().from(contactSources).orderBy(asc(contactSources.id));
+    for (const country of ["ZZ", "UK", "USA", "us", " US ", "United States", "AQ"]) {
+      await tx.execute(sql`UPDATE companies SET country_code = ${country} WHERE id = ${property.id}`);
+      const before = await tx.select().from(companies).orderBy(asc(companies.id));
+      assert.deepEqual(await auditPropertyIdentities(tx), [{ id: property.id, issues: ["unsupported country code"] }]);
+      await assert.rejects(assertPropertyIdentities(tx), /unsupported country code/);
+      await assert.rejects(seedDirectory(tx), /unsupported country code/);
+      assert.deepEqual(await tx.select().from(companies).orderBy(asc(companies.id)), before);
+    }
+    assert.deepEqual(await tx.select().from(officialContacts).orderBy(asc(officialContacts.id)), contacts);
+    assert.deepEqual(await tx.select().from(contactSources).orderBy(asc(contactSources.id)), sources);
+  });
+});
+
+test("direct directory filters reject unsupported country codes before querying", async () => {
+  for (const countryCode of ["ZZ", "UK", "USA", "us", " US ", ""]) {
+    await assert.rejects(directory.list("", undefined, 20, 0, { countryCode }), { code: "INVALID_COUNTRY" });
+  }
 });
 
 test("seeding and identity enforcement leave all existing phone evidence and review dates unchanged", async () => {

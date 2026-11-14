@@ -9,6 +9,7 @@ import { ApiFault, limitations, SOURCE_MAX_AGE_DAYS, CACHE_MAX_ENTRIES, CACHE_TT
 import { normalize } from "../verification/normalize";
 import { decide } from "../verification/decision";
 import { guidanceFor, travelSafety } from "../verification/travel-safety";
+import { isSupportedCountry } from "@workspace/db/countries";
 
 export function verificationRouter(directory: Directory, provider: MetadataProvider): IRouter {
   const router = Router();
@@ -30,6 +31,9 @@ export function verificationRouter(directory: Directory, provider: MetadataProvi
     // Generated coercion must not accept arrays or object-shaped query values.
     if (!parsed.success || Object.values(req.query).some((v) => typeof v !== "string")) throw new ApiFault(400, "INVALID_INPUT", "Invalid directory query.");
     const { search = "", category, limit = 20, offset = 0, ...filters } = parsed.data;
+    if (filters.countryCode !== undefined && !isSupportedCountry(filters.countryCode)) {
+      throw new ApiFault(400, "INVALID_COUNTRY", "Use a supported ISO two-letter country.");
+    }
     const page = await directory.list(search, category, limit, offset, filters);
     res.json(ListCompaniesResponse.parse({ ...page, limit, offset, nextOffset: offset + limit < page.total ? offset + limit : null }));
   });

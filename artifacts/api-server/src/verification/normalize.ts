@@ -1,4 +1,5 @@
-import { isSupportedCountry, parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/max";
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/max";
+import { isSupportedCountry } from "@workspace/db/countries";
 import { ApiFault } from "./policy";
 
 export function normalize(phoneNumber: string, defaultCountry?: string) {

@@ -59,7 +59,10 @@ curl -s localhost:80/api/checks -H 'Content-Type: application/json' \
 Directory `search` also checks address, city, subdivision and official property
 code, plus curated hotel-name and city aliases. `city` is an exact
 case-insensitive canonical city or city-alias filter (maximum 80 characters);
-`countryCode` is uppercase ISO alpha-2; `brandId` is a stable parent listing ID.
+`countryCode` is an uppercase two-letter code supported by the same
+libphonenumber metadata as number checks (including supported territories).
+Unknown codes such as `ZZ` and aliases such as `UK` are rejected; use `GB`.
+`brandId` is a stable parent listing ID.
 Filters combine with category/search/pagination. Service-scoped alternatives
 only include current contacts for the selected listing and requested service;
 they never substitute another hotel or brand central reservations.
@@ -677,7 +680,10 @@ renewing review dates.
 
 PostgreSQL independently rejects property inserts and updates unless they have
 the hotel category, a non-whitespace official property code, address, city and
-country, and a parent hotel brand. A generated internal role column and a
+country code from the number checker's supported set, and a parent hotel brand.
+The read-only identity audit reports missing countries separately from unsupported
+codes; it never guesses, normalizes, or repairs imported locations.
+A generated internal role column and a
 composite foreign key prevent missing parents, organizations used as brands,
 self-parenting, and deletion or reclassification of a brand that still has
 properties. Non-property organizations do not need location metadata.

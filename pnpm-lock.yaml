@@ -619,6 +619,9 @@ importers:
       drizzle-zod:
         specifier: ^0.8.3
         version: 0.8.3(drizzle-orm@0.45.4(@types/pg@8.23.1)(pg@8.23.1))(zod@3.25.76)
+      libphonenumber-js:
+        specifier: ^1.13.16
+        version: 1.13.16
       pg:
         specifier: ^8.23.1
         version: 8.23.1
