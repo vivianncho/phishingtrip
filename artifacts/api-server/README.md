@@ -104,6 +104,35 @@ the checked number** and never change its verdict. No live scam-report provider
 has been added. Unknown or mismatched numbers remain `not_verified`, not fraud.
 API title `Api` and `GET /api/healthz → {"status":"ok"}` are unchanged.
 
+## Read-only contact review history
+
+Only trusted shell/database operators should run this maintenance command, using
+server-side database access (prefer a SELECT-only database role). It adds no HTTP
+endpoint and is not available to anonymous app or extension clients.
+
+```sh
+pnpm --filter @workspace/api-server run history:directory
+pnpm --filter @workspace/api-server run history:directory --source-id delta-reservations-2026-11-14 --limit 10 --offset 0
+```
+
+JSON `items` contain audit ID, source ID, `reviewer` (the operator-supplied handle,
+not an authenticated identity), `note`, full `before`/`after` snapshots, and two
+distinct timestamps: `reviewedAt` is the human review time from the saved after
+snapshot; `recordedAt` is when the review was committed to the audit log.
+Snapshots preserve the historical source, contact and company values rather
+than substituting their current values. Treat output as private operator data;
+do not publish it or forward notes to consumer endpoints or analytics.
+
+Results are newest recorded first, with descending unique audit ID breaking
+timestamp ties. `--source-id` is an exact optional filter; an unknown source
+fails with `Source not found`, while a known source with no reviews returns an
+empty page. `--limit` is 1–100 (default 20), `--offset` is 0–10000 (default 0).
+Unknown/repeated flags, missing values and invalid bounds fail.
+The envelope includes `sourceId`, `limit`, `offset`, and `nextOffset` (null at
+the end or the offset ceiling). Continue with `nextOffset`; ordering is stable
+for an unchanged log. New reviews between requests can shift offset pages.
+This command only selects data; it never renews a source or records a review.
+
 ## Development setup
 
 Use Node 24 and pnpm from the workspace root. The existing PostgreSQL
