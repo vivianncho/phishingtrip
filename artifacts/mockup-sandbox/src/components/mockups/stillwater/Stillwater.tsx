@@ -53,17 +53,17 @@ function Fish({ state, tick }: { state: FishState; tick: number }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const captions: Record<FishState, string> = {
-    idle: 'One step at a time. Pip’s here with you.',
-    searching: 'Pip is scanning the example directory…',
-    official: 'An example match. Pip can rest a little.',
-    suspicious: 'No rush. Pip found another way to get help.',
+    idle: 'One step at a time. Hook is here with you.',
+    searching: 'Hook is scanning the example directory…',
+    official: 'An example match. Hook can rest a little.',
+    suspicious: 'No rush. There’s another way to get help.',
     unverified: 'Not sure yet. You still have a next step.',
   };
   function swim() { setBoost(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setBoost(false), 950); }
   return <div className={`sw-fish-stage sw-status-${state}`}>
     <i className="sw-bubble" /><i className="sw-bubble b2" /><i className="sw-bubble b3" />
-    <button key={tick} className={`sw-fish-button ${boost ? 'sw-boost' : ''}`} onClick={swim} aria-label={`Say hello to Pip the lanternfish. ${captions[state]}`}>
-      <svg className="sw-fish-art" viewBox="0 0 300 210" fill="none" role="img" aria-label={`Pip the lanternfish, ${state}`}>
+    <button key={tick} className={`sw-fish-button ${boost ? 'sw-boost' : ''}`} onClick={swim} aria-label={`Tap to make Hook the fish swim. ${captions[state]}`}>
+      <svg className="sw-fish-art" viewBox="0 0 300 210" fill="none" role="img" aria-label={`Hook the fish, ${state}`}>
         <defs>
           <linearGradient id="sw-body" x1="134" y1="46" x2="189" y2="161" gradientUnits="userSpaceOnUse"><stop stopColor="#a2ffeb" /><stop offset=".45" stopColor="#52dbc8" /><stop offset="1" stopColor="#158b99" /></linearGradient>
           <linearGradient id="sw-tail" x1="50" y1="90" x2="109" y2="127"><stop stopColor="#1c7488" /><stop offset="1" stopColor="#63ebd7" /></linearGradient>
@@ -139,7 +139,7 @@ export function Stillwater() {
 
       {tab === 'check' && <main className={`sw-screen-enter ${result || checking ? 'sw-result-view' : ''}`}>
         <p className="sw-eyebrow"><span className="sw-dot" /> A little calm. A clearer call.</p>
-        <h1 className="sw-title">{result ? <>Good instincts.<br /><span>Let’s take a look.</span></> : checking ? <>Hold the line.<br /><span>Pip’s on it.</span></> : <>Before you call,<br /><span>check the waters.</span></>}</h1>
+        <h1 className="sw-title">{result ? <>Good instincts.<br /><span>Let’s take a look.</span></> : checking ? <>One moment.<br /><span>Checking the waters.</span></> : <>Before you call,<br /><span>check the waters.</span></>}</h1>
         {!result && !checking && <p className="sw-subtitle">Travel feels stressful enough.<br />Check a hotel, rental, airline, or booking number.</p>}
         <Fish state={checking ? 'searching' : result?.verdict || 'idle'} tick={tick} />
         {!result && !checking && <form onSubmit={submit}>
@@ -159,7 +159,7 @@ export function Stillwater() {
           <button className="sw-primary" onClick={() => result.verdict === 'official' ? saveContact(company) : openDirectory()}><Icon name={result.verdict === 'official' ? 'plus' : 'book'} size={18} />{result.verdict === 'official' ? saved.includes(company.id) ? 'View in My Trips' : 'Save to My Trips' : result.verdict === 'suspicious' ? 'Find the example listed contact' : 'Explore example directory'}<Icon name="arrow" size={17} /></button>
         </section>}
         {result && <button className="sw-new-check" onClick={() => { setResult(null); setInput(''); setError(''); }}>Check something else</button>}
-        {!checking && <section className="sw-examples"><p className="sw-example-label"><span>Take Pip for a test swim</span><span>Try a scenario</span></p><div className="sw-scenarios">{SCENARIOS.map(s => <button className="sw-scenario" key={s.id} onClick={() => runCheck(s.value)}><Icon name={s.icon} size={13} />{s.label}</button>)}</div></section>}
+        {!checking && <section className="sw-examples"><p className="sw-example-label"><span>Take Hook for a test swim</span><span>Try a scenario</span></p><div className="sw-scenarios">{SCENARIOS.map(s => <button className="sw-scenario" key={s.id} onClick={() => runCheck(s.value)}><Icon name={s.icon} size={13} />{s.label}</button>)}</div></section>}
         <p className="sw-privacy"><Icon name="lock" size={14} /><span>A prototype, not a verification service. All demo numbers and companies are fictional. No calls. No number leaves this device.</span></p>
       </main>}
 

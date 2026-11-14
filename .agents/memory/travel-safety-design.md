@@ -5,6 +5,12 @@ description: User's product audience, brand, and requested interactive fish dire
 
 The product helps stressed travelers check customer service numbers before calling. The intended eventual app is iPhone-first with Expo. The user requested starting with an interactive design frontend, not live verification.
 
+The fish companion is named **Hook**, not Pip or an unnamed fish.
+
+**Why:** The user explicitly requested "Name the fish hook", superseding the earlier unnamed-fish direction.
+
+**How to apply:** Use Hook in companion copy and accessible labels; keep the app brand separate.
+
 The user explicitly broadened the scope beyond flights: hotels and all kinds of travel services should be represented, with anxious travelers as the primary audience.
 
 **Why:** They asked whether hotel and other travel numbers could be checked for spam and said, "Make it target people anxious about travel."
