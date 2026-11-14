@@ -14,6 +14,7 @@ Travel phone-number evidence checker with a separate fish-companion design proto
 - `pnpm --filter @workspace/api-server run review:directory notify` — opt-in configured webhook alerts; `notification-status` shows delivery health (see API README)
 - `pnpm --filter @workspace/api-server test` — decision, route, privacy and provider tests (requires seeded dev database)
 - `pnpm --filter @workspace/mockup-sandbox test` — local companion regression checks; no server, lookup, or calls
+- `pnpm --filter @workspace/stillwater-mobile test` — mobile screen/provider lifecycle, stale-response and request privacy tests (no server or device required)
 - Required env: `DATABASE_URL` — Postgres connection string
 - `node --test extensions/stillwater/tests/*.test.mjs` — extension privacy, validation, UI-controller and package tests
 - `node extensions/stillwater/scripts/build.mjs` — build Chrome/Edge and Safari resource packages

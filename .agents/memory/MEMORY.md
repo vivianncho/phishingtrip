@@ -5,3 +5,4 @@
 - [Hotel contact scope](hotel-contact-scope.md) — a property's published “Tel” does not establish a direct front-desk line.
 - [Scheduled queue fairness](scheduled-queue-fairness.md) — capped retries need durable fair ordering or repeated failures can indefinitely block later sources.
 - [Shared limit operations](shared-limit-operations.md) — replicas and provider-key rotations must not create new spend allowances; Basic pricing is not paid-package approval.
+- [Mobile test module identity](mobile-test-module-identity.md) — React Query’s ESM and CommonJS entries have separate contexts; test providers and hooks must use the same entry.
