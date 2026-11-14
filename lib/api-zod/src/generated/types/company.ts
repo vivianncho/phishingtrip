@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListingType } from './listingType';
 import type { OfficialContact } from './officialContact';
 import type { TravelCategory } from './travelCategory';
 
@@ -13,5 +14,21 @@ export interface Company {
   name: string;
   category: TravelCategory;
   website: string;
+  listingType: ListingType;
+  /**
+     * Parent brand ID; never expands a number match to other properties.
+     * @nullable
+     */
+  brandId: string | null;
+  /** @nullable */
+  propertyCode: string | null;
+  /** @nullable */
+  address: string | null;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  subdivision: string | null;
+  /** @nullable */
+  countryCode: string | null;
   contacts: OfficialContact[];
 }

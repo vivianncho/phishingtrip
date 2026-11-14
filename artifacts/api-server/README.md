@@ -20,6 +20,49 @@ an individual hotel's front desk. Booking.com and Viator have official website
 entries only, with empty contact lists; do not fabricate a phone number or match.
 Rerun `seed:directory` to add these entries without refreshing old review dates.
 
+### Individual hotel properties
+
+Hotel listings distinguish `listingType=brand` (Marriott central reservations)
+from `listingType=property`. Each property has its own stable listing ID,
+`brandId`, official `propertyCode`, full `address`, `city`, `subdivision`, and
+ISO `countryCode`. Brand membership never expands an exact number match.
+Other travel organizations use `listingType=organization`; non-property
+location fields are null.
+
+The following official property overview pages were read on **2026-11-14 at
+20:49 UTC**, including their local address and **Tel** link, not just a search
+snippet:
+
+| Property ID | Property / address | Published local main line | Official source |
+| --- | --- | --- | --- |
+| `marriott-nycmq` | New York Marriott Marquis, 1535 Broadway, New York, New York, USA, 10036 | +1 212 398 1900 | https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/ |
+| `marriott-sfodt` | San Francisco Marriott Marquis, 780 Mission Street, San Francisco, California, USA, 94103 | +1 415 896 1600 | https://www.marriott.com/en-us/hotels/sfodt-san-francisco-marriott-marquis/overview/ |
+
+These contacts are `serviceType=property_main`, **not confirmed direct
+front-desk lines**. Marriott's brand line is `central_reservations`; other
+existing contacts use `general` alongside their detailed service labels.
+Use optional `claimedService` (`general`, `central_reservations`,
+`property_main`, or `front_desk`) to require an exact service type. A service
+mismatch returns `not_verified` / `SERVICE_MISMATCH`, even if the number is
+published for the selected listing. A different property or a brand central
+number submitted for a property returns `COMPANY_MISMATCH`. Unknown property
+IDs return 404; an unknown property search returns an empty page, never a
+brand fallback. Direct front-desk checks currently have no matching seed
+evidence and must not be reassured by the local main line.
+
+```sh
+curl -s 'localhost:80/api/companies?listingType=property&brandId=marriott&city=New%20York&countryCode=US'
+curl -s localhost:80/api/checks -H 'Content-Type: application/json' \
+  -d '{"phoneNumber":"+12123981900","claimedCompanyId":"marriott-nycmq","claimedService":"property_main"}'
+```
+
+Directory `search` also checks address, city, subdivision and official property
+code. `city` is an exact case-insensitive literal filter (maximum 80 characters);
+`countryCode` is uppercase ISO alpha-2; `brandId` is a stable parent listing ID.
+Filters combine with category/search/pagination. Service-scoped alternatives
+only include current contacts for the selected listing and requested service;
+they never substitute another hotel or brand central reservations.
+
 `GET /api/travel-safety` returns short, category-specific educational warnings
 and next steps, referencing FTC travel-scam advice. `POST /api/checks` also
 includes optional `travelGuidance` when `claimedCompanyId` is supplied.
@@ -65,7 +108,7 @@ curl -s localhost:80/api/checks \
 
 `POST /api/checks` accepts only `phoneNumber` (3–64 characters),
 optional uppercase supported ISO alpha-2 `defaultCountry`, and optional
-`claimedCompanyId`. Unknown properties are rejected. Send a complete number,
+`claimedCompanyId` and `claimedService`. Unknown request fields are rejected. Send a complete number,
 not a URL, page content, vanity number, extension, or multiple candidates.
 National input **requires** an explicit country; no IP, browser language, or
 hidden locale guess is used. International input begins with `+`; an explicit
@@ -125,7 +168,7 @@ No success response says “safe” or declares a number definitively fraudulent
 
 ### Directory
 
-`GET /api/companies` filters company names by case-insensitive literal substring
+`GET /api/companies` searches names and property locations/codes by case-insensitive literal substring
 `search` (maximum 80 characters), optionally a supported travel `category` (for example `category=hotel`). `%` and `_`
 are literal characters, not SQL wildcard searches. `limit` is an integer 1–50
 (default 20); `offset` is 0–10000 (default 0). Repeated, object-shaped, and unknown
@@ -136,8 +179,9 @@ deterministic for an unchanged directory:
 {"items":[],"total":3,"limit":20,"offset":100,"nextOffset":null}
 ```
 
-Each company includes `id`, `name`, `category`, `website`, and `contacts`.
-Each contact includes E.164 `number`, `companyId`, `region`, `service`,
+Each company includes `id`, `name`, `category`, `website`, `listingType`,
+nullable property identity/location fields, and `contacts`.
+Each contact includes E.164 `number`, `companyId`, `region`, `service`, `serviceType`,
 computed `freshness`, and `sources`, whose `sourceUrl`, `reviewedAt`,
 `expiresAt`, source name and assertion are explicit. Detail responses
 include stale contacts so expiration is visible rather than silently hidden.

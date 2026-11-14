@@ -31,7 +31,8 @@ export const checkNumberBodyClaimedCompanyIdRegExp = new RegExp('^[a-z][a-z0-9-]
 export const CheckNumberBody = zod.object({
   "phoneNumber": zod.string().min(checkNumberBodyPhoneNumberMin).max(checkNumberBodyPhoneNumberMax).describe('Full number only; no URLs, extensions, vanity letters or surrounding page text.'),
   "defaultCountry": zod.string().regex(checkNumberBodyDefaultCountryRegExp).optional().describe('Explicit ISO 3166-1 alpha-2 country for national numbers. No inferred locale.'),
-  "claimedCompanyId": zod.string().regex(checkNumberBodyClaimedCompanyIdRegExp).optional()
+  "claimedCompanyId": zod.string().regex(checkNumberBodyClaimedCompanyIdRegExp).optional(),
+  "claimedService": zod.enum(['general', 'central_reservations', 'property_main', 'front_desk']).optional().describe('Property main is a hotel\'s published main line, not a verified direct front-desk line.')
 })
 
 export const checkNumberResponseEvidenceItemNumberRegExp = new RegExp('^\\+[1-9][0-9]{6,14}$');
@@ -42,9 +43,10 @@ export const CheckNumberResponse = zod.object({
   "normalizedNumber": zod.string(),
   "countryCode": zod.string().nullable(),
   "claimedCompanyId": zod.string().nullable(),
+  "claimedService": zod.union([zod.enum(['general', 'central_reservations', 'property_main', 'front_desk']).describe('Property main is a hotel\'s published main line, not a verified direct front-desk line.'),zod.null()]).optional(),
   "outcome": zod.enum(['official_match', 'reports_found', 'not_verified']),
   "label": zod.enum(['Official match', 'Reports found', 'Not verified']),
-  "reason": zod.enum(['EXACT_OFFICIAL_MATCH', 'ATTRIBUTABLE_REPORTS', 'SOURCE_CONFLICT', 'STALE_EVIDENCE', 'COMPANY_MISMATCH', 'NO_EVIDENCE']),
+  "reason": zod.enum(['EXACT_OFFICIAL_MATCH', 'ATTRIBUTABLE_REPORTS', 'SOURCE_CONFLICT', 'STALE_EVIDENCE', 'COMPANY_MISMATCH', 'SERVICE_MISMATCH', 'NO_EVIDENCE']),
   "explanation": zod.string(),
   "checkedAt": zod.string().datetime({"offset":true}),
   "freshness": zod.enum(['current', 'stale', 'unknown']),
@@ -66,6 +68,7 @@ export const CheckNumberResponse = zod.object({
   "number": zod.string(),
   "region": zod.string(),
   "service": zod.string(),
+  "serviceType": zod.enum(['general', 'central_reservations', 'property_main', 'front_desk']).describe('Property main is a hotel\'s published main line, not a verified direct front-desk line.'),
   "freshness": zod.enum(['current', 'stale', 'unknown']),
   "sources": zod.array(zod.object({
   "id": zod.string(),
@@ -111,6 +114,10 @@ export const CheckNumberResponse = zod.object({
  */
 export const listCompaniesQuerySearchMax = 80;
 
+export const listCompaniesQueryBrandIdRegExp = new RegExp('^[a-z][a-z0-9-]{0,63}$');
+export const listCompaniesQueryCityMax = 80;
+
+export const listCompaniesQueryCountryCodeRegExp = new RegExp('^[A-Z]{2}$');
 export const listCompaniesQueryLimitDefault = 20;
 export const listCompaniesQueryLimitMax = 50;
 
@@ -123,6 +130,10 @@ export const listCompaniesQueryOffsetMax = 10000;
 export const ListCompaniesQueryParams = zod.object({
   "search": zod.coerce.string().max(listCompaniesQuerySearchMax).optional(),
   "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']).optional(),
+  "listingType": zod.enum(['organization', 'brand', 'property']).optional(),
+  "brandId": zod.coerce.string().regex(listCompaniesQueryBrandIdRegExp).optional(),
+  "city": zod.coerce.string().min(1).max(listCompaniesQueryCityMax).optional(),
+  "countryCode": zod.coerce.string().regex(listCompaniesQueryCountryCodeRegExp).optional(),
   "limit": zod.coerce.number().int().min(1).max(listCompaniesQueryLimitMax).default(listCompaniesQueryLimitDefault),
   "offset": zod.coerce.number().int().min(listCompaniesQueryOffsetMin).max(listCompaniesQueryOffsetMax).default(listCompaniesQueryOffsetDefault)
 })
@@ -136,12 +147,20 @@ export const ListCompaniesResponse = zod.object({
   "name": zod.string(),
   "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
   "website": zod.string().url(),
+  "listingType": zod.enum(['organization', 'brand', 'property']),
+  "brandId": zod.string().nullable().describe('Parent brand ID; never expands a number match to other properties.'),
+  "propertyCode": zod.string().nullable(),
+  "address": zod.string().nullable(),
+  "city": zod.string().nullable(),
+  "subdivision": zod.string().nullable(),
+  "countryCode": zod.string().nullable(),
   "contacts": zod.array(zod.object({
   "id": zod.string(),
   "companyId": zod.string(),
   "number": zod.string(),
   "region": zod.string(),
   "service": zod.string(),
+  "serviceType": zod.enum(['general', 'central_reservations', 'property_main', 'front_desk']).describe('Property main is a hotel\'s published main line, not a verified direct front-desk line.'),
   "freshness": zod.enum(['current', 'stale', 'unknown']),
   "sources": zod.array(zod.object({
   "id": zod.string(),
@@ -182,12 +201,20 @@ export const GetCompanyResponse = zod.object({
   "name": zod.string(),
   "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
   "website": zod.string().url(),
+  "listingType": zod.enum(['organization', 'brand', 'property']),
+  "brandId": zod.string().nullable().describe('Parent brand ID; never expands a number match to other properties.'),
+  "propertyCode": zod.string().nullable(),
+  "address": zod.string().nullable(),
+  "city": zod.string().nullable(),
+  "subdivision": zod.string().nullable(),
+  "countryCode": zod.string().nullable(),
   "contacts": zod.array(zod.object({
   "id": zod.string(),
   "companyId": zod.string(),
   "number": zod.string(),
   "region": zod.string(),
   "service": zod.string(),
+  "serviceType": zod.enum(['general', 'central_reservations', 'property_main', 'front_desk']).describe('Property main is a hotel\'s published main line, not a verified direct front-desk line.'),
   "freshness": zod.enum(['current', 'stale', 'unknown']),
   "sources": zod.array(zod.object({
   "id": zod.string(),

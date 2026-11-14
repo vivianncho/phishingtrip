@@ -129,6 +129,104 @@ test("travel scam guidance is educational, covers every category, and is not rep
   assert.equal(unknown.travelGuidance, undefined);
   assert.equal(unknown.outcome, "not_verified");
 });
+test("hotel properties have exact official local contacts and searchable location identities", async () => {
+  const app = appFor();
+  const expected = [
+    { id: "marriott-nycmq", city: "New York", code: "NYCMQ", number: "+12123981900", address: "1535 Broadway" },
+    { id: "marriott-sfodt", city: "San Francisco", code: "SFODT", number: "+14158961600", address: "780 Mission Street" },
+  ];
+  const page = (await request(app).get("/api/companies?category=hotel&listingType=property&brandId=marriott&countryCode=US&limit=1").expect(200)).body;
+  ListCompaniesResponse.parse(page);
+  assert.equal(page.total, 2);
+  assert.equal(page.items.length, 1);
+  assert.equal(page.nextOffset, 1);
+  const next = (await request(app).get("/api/companies?category=hotel&listingType=property&brandId=marriott&countryCode=US&limit=1&offset=1").expect(200)).body;
+  assert.notEqual(page.items[0].id, next.items[0].id);
+  assert.equal(next.nextOffset, null);
+  for (const property of expected) {
+    const company = (await request(app).get(`/api/companies/${property.id}`).expect(200)).body;
+    GetCompanyResponse.parse(company);
+    assert.equal(company.listingType, "property");
+    assert.equal(company.brandId, "marriott");
+    assert.equal(company.propertyCode, property.code);
+    assert.equal(company.countryCode, "US");
+    assert.equal(company.city, property.city);
+    assert.ok(company.address.startsWith(property.address));
+    assert.equal(company.contacts.length, 1);
+    const contact = company.contacts[0];
+    assert.equal(contact.number, property.number);
+    assert.equal(contact.companyId, property.id);
+    assert.equal(contact.serviceType, "property_main");
+    assert.match(contact.service, /front-desk service not confirmed/);
+    assert.ok(contact.region.includes(property.city));
+    assert.equal(contact.sources[0].number, property.number);
+    assert.equal(contact.sources[0].reviewedAt, "2026-11-14T20:49:15.000Z");
+    assert.ok(contact.sources[0].sourceUrl.includes(`/hotels/${property.code.toLowerCase()}-`));
+    assert.equal(new URL(contact.sources[0].sourceUrl).hostname, "www.marriott.com");
+    for (const term of [property.code.toLowerCase(), property.address]) {
+      const found = (await request(app).get("/api/companies").query({ listingType: "property", search: term }).expect(200)).body;
+      assert.deepEqual(found.items.map((c: { id: string }) => c.id), [property.id]);
+    }
+    const city = (await request(app).get("/api/companies").query({ brandId: "marriott", city: property.city.toLowerCase(), countryCode: "US" }).expect(200)).body;
+    assert.deepEqual(city.items.map((c: { id: string }) => c.id), [property.id]);
+  }
+  for (const query of [
+    { listingType: "property", search: "Unknown Marriott Hotel" },
+    { listingType: "property", city: "Unknown city" },
+    { listingType: "property", brandId: "unknown-brand" },
+    { listingType: "property", countryCode: "GB" },
+    { listingType: "property", city: "%" },
+  ]) {
+    const empty = (await request(app).get("/api/companies").query(query).expect(200)).body;
+    assert.equal(empty.total, 0);
+    assert.deepEqual(empty.items, []);
+    assert.equal(empty.nextOffset, null);
+  }
+  const brand = (await request(app).get("/api/companies?listingType=brand&category=hotel").expect(200)).body;
+  assert.deepEqual(brand.items.map((c: { id: string }) => c.id), ["marriott"]);
+  assert.equal(brand.items[0].contacts[0].serviceType, "central_reservations");
+  await request(app).get("/api/companies/marriott-unknown-property").expect(404);
+});
+test("hotel checks never substitute another property, central reservations or a main line for a front desk", async () => {
+  const app = appFor();
+  const check = async (phoneNumber: string, claimedCompanyId: string, claimedService?: string) => {
+    const response = (await request(app).post("/api/checks").send({ phoneNumber, claimedCompanyId, claimedService }).expect(200)).body;
+    CheckNumberResponse.parse(response);
+    return response;
+  };
+  const current = Date.now() >= Date.parse("2026-11-14T20:49:15Z") && Date.now() < Date.parse("2027-02-12T20:49:15Z");
+  const right = await check("+12123981900", "marriott-nycmq", "property_main");
+  assert.equal(right.reason, current ? "EXACT_OFFICIAL_MATCH" : "STALE_EVIDENCE");
+  assert.equal(right.claimedService, "property_main");
+  assert.equal((await check("+14158961600", "marriott-sfodt")).outcome, current ? "official_match" : "not_verified");
+  for (const [number, id] of [
+    ["+12123981900", "marriott-sfodt"], ["+14158961600", "marriott-nycmq"],
+    ["+18882362427", "marriott-nycmq"], ["+12123981900", "marriott"],
+  ]) {
+    const mismatch = await check(number!, id!);
+    assert.equal(mismatch.reason, "COMPANY_MISMATCH");
+    assert.equal(mismatch.outcome, "not_verified");
+    assert.ok(mismatch.alternatives.every((c: { companyId: string }) => c.companyId === id));
+  }
+  for (const [number, id, service] of [
+    ["+18882362427", "marriott", "front_desk"],
+    ["+12123981900", "marriott-nycmq", "front_desk"],
+    ["+12123981900", "marriott-nycmq", "central_reservations"],
+  ]) {
+    const mismatch = await check(number!, id!, service);
+    assert.equal(mismatch.reason, "SERVICE_MISMATCH");
+    assert.equal(mismatch.outcome, "not_verified");
+    assert.deepEqual(mismatch.alternatives, []);
+  }
+  const unknown = await check("+442079460018", "marriott-nycmq", "property_main");
+  assert.equal(unknown.reason, "NO_EVIDENCE");
+  assert.ok(unknown.alternatives.every((c: { companyId: string; serviceType: string }) => c.companyId === "marriott-nycmq" && c.serviceType === "property_main"));
+  await request(app).post("/api/checks").send({ phoneNumber: "+18882362427", claimedCompanyId: "marriott-unknown-property" }).expect(404);
+  for (const query of ["listingType=front_desk", "brandId=INVALID", "city=", "countryCode=usa", "city=x&city=y", "listingType[property]=x"]) {
+    await request(app).get(`/api/companies?${query}`).expect(400);
+  }
+  await request(app).post("/api/checks").send({ phoneNumber: "+12123981900", claimedService: "anything" }).expect(400);
+});
 test("invalid inputs, IDs, queries, body limits and unsupported types have safe standard errors", async () => {
   const app = appFor();
   for (const query of ["limit=0", "limit=51", "limit=1.5", "offset=-1", "offset=10001", "category=bank", "search=" + "x".repeat(81), "limit=1&limit=2", "search[x]=secret", "unknown=x"]) {
@@ -149,7 +247,7 @@ test("invalid inputs, IDs, queries, body limits and unsupported types have safe 
 });
 test("provider failures and missing coverage do not erase directory evidence or create fraud claims", async () => {
   const number = "+18002211212", time = Date.now();
-  const c = { id: "contact", companyId: "test", number, region: "Test", service: "Fixture", freshness: "current" as const, sources: [{
+  const c = { id: "contact", companyId: "test", number, region: "Test", service: "Fixture", serviceType: "general" as const, freshness: "current" as const, sources: [{
     id: "source", companyId: "test", kind: "official_contact" as const, number, sourceUrl: "https://fixture.example", sourceName: "Fixture",
     reviewedAt: new Date(time - 1000).toISOString(), expiresAt: new Date(time + 86400000).toISOString(), assertion: "listed" as const, freshness: "current" as const,
   }] };

@@ -8,6 +8,7 @@ export const officialContacts = pgTable("official_contacts", {
   number: text("number").notNull(),
   region: text("region").notNull(),
   service: text("service").notNull(),
+  serviceType: text("service_type", { enum: ["general", "central_reservations", "property_main", "front_desk"] }).notNull().default("general"),
 }, (t) => [index("official_contacts_number_idx").on(t.number)]);
 export const insertOfficialContactSchema = createInsertSchema(officialContacts);
 export type OfficialContactRow = typeof officialContacts.$inferSelect;

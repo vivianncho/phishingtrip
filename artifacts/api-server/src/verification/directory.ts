@@ -1,13 +1,20 @@
 import { db, companies, officialContacts, contactSources } from "@workspace/db";
-import { asc, eq, ilike, and, sql } from "drizzle-orm";
+import { asc, eq, ilike, and, or, sql } from "drizzle-orm";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
 import { evidenceFreshness, officialProvenance } from "./source-policy";
 export { evidenceFreshness } from "./source-policy";
 
 export interface Directory {
-  list(search: string, category: string | undefined, limit: number, offset: number): Promise<{ items: Company[]; total: number }>;
+  list(search: string, category: string | undefined, limit: number, offset: number, filters?: DirectoryFilters): Promise<{ items: Company[]; total: number }>;
   get(id: string): Promise<Company | null>;
   matching(number: string): Promise<OfficialContact[]>;
+}
+
+export interface DirectoryFilters {
+  listingType?: Company["listingType"];
+  brandId?: string;
+  city?: string;
+  countryCode?: string;
 }
 
 export function contactFreshness(sources: Evidence[]): Evidence["freshness"] {
@@ -44,10 +51,15 @@ export const directory: Directory = {
     }
     return { ...company, contacts };
   },
-  async list(search, category, limit, offset) {
-    const escaped = search.replace(/[\\%_]/g, "\\$&");
-    const where = and(search ? ilike(companies.name, `%${escaped}%`) : undefined,
-      category ? eq(companies.category, category as Company["category"]) : undefined);
+  async list(search, category, limit, offset, filters = {}) {
+    const escape = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+    const pattern = `%${escape(search)}%`;
+    const where = and(search ? or(...[companies.name, companies.city, companies.address, companies.propertyCode, companies.subdivision].map((column) => ilike(column, pattern))) : undefined,
+      category ? eq(companies.category, category as Company["category"]) : undefined,
+      filters.listingType ? eq(companies.listingType, filters.listingType) : undefined,
+      filters.brandId ? eq(companies.brandId, filters.brandId) : undefined,
+      filters.city ? ilike(companies.city, escape(filters.city)) : undefined,
+      filters.countryCode ? eq(companies.countryCode, filters.countryCode) : undefined);
     const rows = await db.select({ id: companies.id }).from(companies).where(where).orderBy(asc(companies.id)).limit(limit).offset(offset);
     const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(companies).where(where);
     const items = (await Promise.all(rows.map((r) => this.get(r.id)))).filter((c): c is Company => c !== null);

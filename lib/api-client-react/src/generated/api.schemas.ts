@@ -5,6 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type ListingType = typeof ListingType[keyof typeof ListingType];
+
+
+export const ListingType = {
+  organization: 'organization',
+  brand: 'brand',
+  property: 'property',
+} as const;
+
+/**
+ * Property main is a hotel's published main line, not a verified direct front-desk line.
+ */
+export type ContactService = typeof ContactService[keyof typeof ContactService];
+
+
+export const ContactService = {
+  general: 'general',
+  central_reservations: 'central_reservations',
+  property_main: 'property_main',
+  front_desk: 'front_desk',
+} as const;
+
 export type TravelCategory = typeof TravelCategory[keyof typeof TravelCategory];
 
 
@@ -47,6 +69,7 @@ export interface CheckInput {
   defaultCountry?: string;
   /** @pattern ^[a-z][a-z0-9-]{0,63}$ */
   claimedCompanyId?: string;
+  claimedService?: ContactService;
 }
 
 export type Freshness = typeof Freshness[keyof typeof Freshness];
@@ -96,6 +119,7 @@ export interface OfficialContact {
   number: string;
   region: string;
   service: string;
+  serviceType: ContactService;
   freshness: Freshness;
   sources: Evidence[];
 }
@@ -105,6 +129,22 @@ export interface Company {
   name: string;
   category: TravelCategory;
   website: string;
+  listingType: ListingType;
+  /**
+     * Parent brand ID; never expands a number match to other properties.
+     * @nullable
+     */
+  brandId: string | null;
+  /** @nullable */
+  propertyCode: string | null;
+  /** @nullable */
+  address: string | null;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  subdivision: string | null;
+  /** @nullable */
+  countryCode: string | null;
   contacts: OfficialContact[];
 }
 
@@ -200,6 +240,7 @@ export const CheckResultReason = {
   SOURCE_CONFLICT: 'SOURCE_CONFLICT',
   STALE_EVIDENCE: 'STALE_EVIDENCE',
   COMPANY_MISMATCH: 'COMPANY_MISMATCH',
+  SERVICE_MISMATCH: 'SERVICE_MISMATCH',
   NO_EVIDENCE: 'NO_EVIDENCE',
 } as const;
 
@@ -209,6 +250,7 @@ export interface CheckResult {
   countryCode: string | null;
   /** @nullable */
   claimedCompanyId: string | null;
+  claimedService?: ContactService | null;
   outcome: CheckResultOutcome;
   label: CheckResultLabel;
   reason: CheckResultReason;
@@ -274,6 +316,20 @@ export type ListCompaniesParams = {
  */
 search?: string;
 category?: TravelCategory;
+listingType?: ListingType;
+/**
+ * @pattern ^[a-z][a-z0-9-]{0,63}$
+ */
+brandId?: string;
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+city?: string;
+/**
+ * @pattern ^[A-Z]{2}$
+ */
+countryCode?: string;
 /**
  * @minimum 1
  * @maximum 50

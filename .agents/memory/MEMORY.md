@@ -2,3 +2,4 @@
 - [Browser extension intent](browser-extension-intent.md) — both Chrome/Edge and iPhone Safari; explicit checks only; Apple also offers browser-based packaging.
 - [Reputation licensing](number-reputation-licensing.md) — enterprise call-label monitoring is not automatically licensed consumer report evidence.
 - [Expo compatibility](expo-compatibility.md) — SDK-specific configuration needs online validation; legacy splash settings fail SDK 58's schema.
+- [Hotel contact scope](hotel-contact-scope.md) — a property's published “Tel” does not establish a direct front-desk line.

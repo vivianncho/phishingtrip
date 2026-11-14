@@ -55,6 +55,10 @@ paths:
       parameters:
         - { in: query, name: search, schema: { type: string, maxLength: 80 } }
         - { in: query, name: category, schema: { $ref: "#/components/schemas/TravelCategory" } }
+        - { in: query, name: listingType, schema: { $ref: "#/components/schemas/ListingType" } }
+        - { in: query, name: brandId, schema: { type: string, pattern: "^[a-z][a-z0-9-]{0,63}$" } }
+        - { in: query, name: city, schema: { type: string, minLength: 1, maxLength: 80 } }
+        - { in: query, name: countryCode, schema: { type: string, pattern: "^[A-Z]{2}$" } }
         - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
         - { in: query, name: offset, schema: { type: integer, minimum: 0, maximum: 10000, default: 0 } }
       responses:
@@ -145,6 +149,13 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ApiProblem" }
   schemas:
+    ListingType:
+      type: string
+      enum: [organization, brand, property]
+    ContactService:
+      type: string
+      description: Property main is a hotel's published main line, not a verified direct front-desk line.
+      enum: [general, central_reservations, property_main, front_desk]
     TravelCategory:
       type: string
       enum: [airline, hotel, vacation_rental, car_rental, booking_service, rail_transfer, cruise, tour]
@@ -176,6 +187,7 @@ components:
           description: Full number only; no URLs, extensions, vanity letters or surrounding page text.
         defaultCountry: { type: string, pattern: "^[A-Z]{2}$", description: Explicit ISO 3166-1 alpha-2 country for national numbers. No inferred locale. }
         claimedCompanyId: { type: string, pattern: "^[a-z][a-z0-9-]{0,63}$" }
+        claimedService: { $ref: "#/components/schemas/ContactService" }
     Freshness:
       type: string
       enum: [current, stale, unknown]
@@ -195,25 +207,33 @@ components:
         number: { type: string, pattern: "^\\+[1-9][0-9]{6,14}$" }
     OfficialContact:
       type: object
-      required: [id, companyId, number, region, service, freshness, sources]
+      required: [id, companyId, number, region, service, serviceType, freshness, sources]
       properties:
         id: { type: string }
         companyId: { type: string }
         number: { type: string }
         region: { type: string }
         service: { type: string }
+        serviceType: { $ref: "#/components/schemas/ContactService" }
         freshness: { $ref: "#/components/schemas/Freshness" }
         sources:
           type: array
           items: { $ref: "#/components/schemas/Evidence" }
     Company:
       type: object
-      required: [id, name, category, website, contacts]
+      required: [id, name, category, website, listingType, brandId, propertyCode, address, city, subdivision, countryCode, contacts]
       properties:
         id: { type: string }
         name: { type: string }
         category: { $ref: "#/components/schemas/TravelCategory" }
         website: { type: string, format: uri }
+        listingType: { $ref: "#/components/schemas/ListingType" }
+        brandId: { type: [string, "null"], description: Parent brand ID; never expands a number match to other properties. }
+        propertyCode: { type: [string, "null"] }
+        address: { type: [string, "null"] }
+        city: { type: [string, "null"] }
+        subdivision: { type: [string, "null"] }
+        countryCode: { type: [string, "null"] }
         contacts:
           type: array
           items: { $ref: "#/components/schemas/OfficialContact" }
@@ -253,9 +273,13 @@ components:
         normalizedNumber: { type: string }
         countryCode: { type: [string, "null"] }
         claimedCompanyId: { type: [string, "null"] }
+        claimedService:
+          anyOf:
+            - { $ref: "#/components/schemas/ContactService" }
+            - { type: "null" }
         outcome: { type: string, enum: [official_match, reports_found, not_verified] }
         label: { type: string, enum: [Official match, Reports found, Not verified] }
-        reason: { type: string, enum: [EXACT_OFFICIAL_MATCH, ATTRIBUTABLE_REPORTS, SOURCE_CONFLICT, STALE_EVIDENCE, COMPANY_MISMATCH, NO_EVIDENCE] }
+        reason: { type: string, enum: [EXACT_OFFICIAL_MATCH, ATTRIBUTABLE_REPORTS, SOURCE_CONFLICT, STALE_EVIDENCE, COMPANY_MISMATCH, SERVICE_MISMATCH, NO_EVIDENCE] }
         explanation: { type: string }
         checkedAt: { type: string, format: date-time }
         freshness: { $ref: "#/components/schemas/Freshness" }

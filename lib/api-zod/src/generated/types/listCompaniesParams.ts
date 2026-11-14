@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListingType } from './listingType';
 import type { TravelCategory } from './travelCategory';
 
 export type ListCompaniesParams = {
@@ -13,6 +14,20 @@ export type ListCompaniesParams = {
  */
 search?: string;
 category?: TravelCategory;
+listingType?: ListingType;
+/**
+ * @pattern ^[a-z][a-z0-9-]{0,63}$
+ */
+brandId?: string;
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+city?: string;
+/**
+ * @pattern ^[A-Z]{2}$
+ */
+countryCode?: string;
 /**
  * @minimum 1
  * @maximum 50

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactService } from './contactService';
 import type { Evidence } from './evidence';
 import type { Freshness } from './freshness';
 
@@ -14,6 +15,7 @@ export interface OfficialContact {
   number: string;
   region: string;
   service: string;
+  serviceType: ContactService;
   freshness: Freshness;
   sources: Evidence[];
 }

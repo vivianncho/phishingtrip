@@ -29,8 +29,8 @@ export function verificationRouter(directory: Directory, provider: MetadataProvi
     const parsed = ListCompaniesQueryParams.strict().safeParse(req.query);
     // Generated coercion must not accept arrays or object-shaped query values.
     if (!parsed.success || Object.values(req.query).some((v) => typeof v !== "string")) throw new ApiFault(400, "INVALID_INPUT", "Invalid directory query.");
-    const { search = "", category, limit = 20, offset = 0 } = parsed.data;
-    const page = await directory.list(search, category, limit, offset);
+    const { search = "", category, limit = 20, offset = 0, ...filters } = parsed.data;
+    const page = await directory.list(search, category, limit, offset, filters);
     res.json(ListCompaniesResponse.parse({ ...page, limit, offset, nextOffset: offset + limit < page.total ? offset + limit : null }));
   });
   router.get("/companies/:id", async (req, res): Promise<void> => {
@@ -44,16 +44,17 @@ export function verificationRouter(directory: Directory, provider: MetadataProvi
     if (!req.is("application/json")) throw new ApiFault(415, "UNSUPPORTED_MEDIA_TYPE", "Use application/json.");
     const parsed = CheckNumberBody.strict().safeParse(req.body);
     if (!parsed.success) throw new ApiFault(400, "INVALID_INPUT", "Invalid check input.");
-    const { phoneNumber, defaultCountry, claimedCompanyId } = parsed.data;
+    const { phoneNumber, defaultCountry, claimedCompanyId, claimedService } = parsed.data;
     const normalized = normalize(phoneNumber, defaultCountry);
     const company = claimedCompanyId ? await directory.get(claimedCompanyId) : null;
     if (claimedCompanyId && !company) throw new ApiFault(404, "COMPANY_NOT_FOUND", "Company not found.");
     const matches = await directory.matching(normalized.number);
-    const result = decide(normalized.number, claimedCompanyId, matches, company?.contacts ?? matches);
+    const result = decide(normalized.number, claimedCompanyId, matches, company?.contacts ?? matches, [], Date.now(), claimedService);
     const lookup = await provider.lookup(normalized.number);
     res.json(CheckNumberResponse.parse({
       ...result, normalizedNumber: normalized.number, countryCode: normalized.countryCode,
       claimedCompanyId: claimedCompanyId ?? null, checkedAt: new Date().toISOString(), limitations,
+      claimedService: claimedService ?? null,
       providers: { directory: "active", reputation: "unavailable", metadata: lookup.status }, metadata: lookup.metadata,
       ...(company ? { travelGuidance: guidanceFor(company.category) } : {}),
     }));

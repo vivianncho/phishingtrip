@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactService } from './contactService';
 
 export interface CheckInput {
   /**
@@ -20,4 +21,5 @@ export interface CheckInput {
   defaultCountry?: string;
   /** @pattern ^[a-z][a-z0-9-]{0,63}$ */
   claimedCompanyId?: string;
+  claimedService?: ContactService;
 }

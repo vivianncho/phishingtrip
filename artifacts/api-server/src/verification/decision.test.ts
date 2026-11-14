@@ -8,7 +8,7 @@ import { evidenceFreshness } from "./directory";
 const now = Date.parse("2026-11-14T21:00:00Z");
 const number = "+18002211212";
 export function fixtureContact(overrides: Partial<OfficialContact> = {}): OfficialContact {
-  return { id: "fixture-contact", companyId: "fixture-air", number, region: "US", service: "Test only", freshness: "current", sources: [{
+  return { id: "fixture-contact", companyId: "fixture-air", number, region: "US", service: "Test only", serviceType: "general", freshness: "current", sources: [{
     id: "fixture-source", kind: "official_contact", companyId: "fixture-air", number, sourceName: "Fixture official site",
     sourceUrl: "https://fixture.example/contact", reviewedAt: "2026-11-14T20:00:00Z",
     expiresAt: "2027-02-12T20:00:00Z", assertion: "listed", freshness: "current",
@@ -58,4 +58,15 @@ test("Reports found requires attributable fixture evidence, never lack of report
     assert.equal(decide(number, undefined, [], [], [invalid], now).outcome, "not_verified");
   }
   assert.equal(decide(number, undefined, [fixtureContact()], [], [report], now).reason, "SOURCE_CONFLICT");
+});
+test("front-desk service requires its own explicit evidence and scoped alternatives", () => {
+  const main = fixtureContact({ serviceType: "property_main" });
+  const desk = fixtureContact({ serviceType: "front_desk" });
+  assert.equal(decide(number, main.companyId, [main], [main], [], now, "front_desk").reason, "SERVICE_MISMATCH");
+  assert.deepEqual(decide(number, main.companyId, [main], [main], [], now, "front_desk").alternatives, []);
+  assert.equal(decide(number, desk.companyId, [desk], [desk], [], now, "front_desk").reason, "EXACT_OFFICIAL_MATCH");
+  const expired = fixtureContact({ serviceType: "front_desk", sources: desk.sources.map((s) => ({ ...s, expiresAt: "2026-11-14T20:30:00Z" })) });
+  const result = decide(number, expired.companyId, [expired], [expired, main], [], now, "front_desk");
+  assert.equal(result.reason, "STALE_EVIDENCE");
+  assert.deepEqual(result.alternatives, []);
 });

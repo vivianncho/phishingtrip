@@ -8,6 +8,7 @@
 import type { CheckResultLabel } from './checkResultLabel';
 import type { CheckResultOutcome } from './checkResultOutcome';
 import type { CheckResultReason } from './checkResultReason';
+import type { ContactService } from './contactService';
 import type { Evidence } from './evidence';
 import type { Freshness } from './freshness';
 import type { NumberMetadata } from './numberMetadata';
@@ -21,6 +22,7 @@ export interface CheckResult {
   countryCode: string | null;
   /** @nullable */
   claimedCompanyId: string | null;
+  claimedService?: ContactService | null;
   outcome: CheckResultOutcome;
   label: CheckResultLabel;
   reason: CheckResultReason;

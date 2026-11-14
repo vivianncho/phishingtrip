@@ -3,9 +3,9 @@ import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { logger } from "../lib/logger";
 import { SOURCE_MAX_AGE_DAYS } from "./policy";
 import { eq } from "drizzle-orm";
-import type { TravelCategory } from "@workspace/api-zod";
 import { pathToFileURL } from "node:url";
 import { officialProvenance } from "./source-policy";
+import type { TravelCategory, ContactService } from "@workspace/api-zod";
 
 // Human-reviewed against the official sites at the recorded instant. Rerunning is NOT a new review.
 export const reviewedAt = new Date("2026-11-14T20:34:24Z");
@@ -41,6 +41,24 @@ const travelSeed = [
     sourceUrl: "https://www.royalcaribbean.com/resources/contact-us" },
 ] as const;
 
+// Read from each property's official overview, including its address and Tel link.
+// The sources say "Tel", not "front desk": do not upgrade these main lines.
+const propertyReviewedAt = new Date("2026-11-14T20:49:15Z");
+const propertySeed = [
+  { id: "marriott-nycmq", name: "New York Marriott Marquis", category: "hotel", website: "https://www.marriott.com",
+    number: "+12123981900", region: "New York, New York, United States",
+    service: "Property main telephone — direct front-desk service not confirmed",
+    sourceUrl: "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
+    propertyCode: "NYCMQ", address: "1535 Broadway, New York, New York, USA, 10036",
+    city: "New York", subdivision: "New York", countryCode: "US" },
+  { id: "marriott-sfodt", name: "San Francisco Marriott Marquis", category: "hotel", website: "https://www.marriott.com",
+    number: "+14158961600", region: "San Francisco, California, United States",
+    service: "Property main telephone — direct front-desk service not confirmed",
+    sourceUrl: "https://www.marriott.com/en-us/hotels/sfodt-san-francisco-marriott-marquis/overview/",
+    propertyCode: "SFODT", address: "780 Mission Street, San Francisco, California, USA, 94103",
+    city: "San Francisco", subdivision: "California", countryCode: "US" },
+] as const;
+
 // No invented phone contacts: these companies direct users to their official help
 // sites until a specific number and its regional/service scope can be reviewed.
 const websiteOnlySeed = [
@@ -50,18 +68,33 @@ const websiteOnlySeed = [
 
 export async function seedDirectory(database: Pick<typeof db, "transaction"> = db) {
   await database.transaction(async (tx) => {
-    for (const entry of [...airlineSeed.map(entry => ({ ...entry, category: "airline" as const, reviewedAt })), ...travelSeed.map(entry => ({ ...entry, reviewedAt: travelReviewedAt }))]) {
+    for (const entry of [...airlineSeed.map(entry => ({ ...entry, category: "airline" as const, reviewedAt })), ...travelSeed.map(entry => ({ ...entry, reviewedAt: travelReviewedAt })), ...propertySeed.map(entry => ({ ...entry, reviewedAt: propertyReviewedAt }))]) {
       if (parsePhoneNumberFromString(entry.number)?.number !== entry.number ||
           !parsePhoneNumberFromString(entry.number)?.isValid() ||
           !officialProvenance(entry.sourceUrl, entry.website)) throw new Error("Invalid seed provenance");
-      await tx.insert(companies).values({ id: entry.id, name: entry.name, website: entry.website, category: entry.category satisfies TravelCategory }).onConflictDoNothing();
+      const property = propertySeed.find((p) => p.id === entry.id);
+      const identity = property ? {
+        listingType: "property" as const, brandId: "marriott", propertyCode: property.propertyCode,
+        address: property.address, city: property.city, subdivision: property.subdivision, countryCode: property.countryCode,
+      } : { listingType: entry.id === "marriott" ? "brand" as const : "organization" as const };
+      await tx.insert(companies).values({ id: entry.id, name: entry.name, website: entry.website, category: entry.category satisfies TravelCategory, ...identity }).onConflictDoNothing();
       const [existingCompany] = await tx.select().from(companies).where(eq(companies.id, entry.id));
       if (existingCompany?.website !== entry.website || existingCompany.category !== entry.category) throw new Error("Seed company provenance conflict");
-      const contactId = `${entry.id}-reservations`;
-      await tx.insert(officialContacts).values({ id: contactId, companyId: entry.id, number: entry.number, region: entry.region, service: entry.service }).onConflictDoNothing();
+      // Classify the pre-existing central listing without changing its evidence dates.
+      if (entry.id === "marriott" && existingCompany.listingType === "organization") {
+        await tx.update(companies).set({ listingType: "brand" }).where(eq(companies.id, entry.id));
+      } else if (Object.entries(identity).some(([key, value]) => existingCompany[key as keyof typeof existingCompany] !== value)) {
+        throw new Error("Seed property identity conflict");
+      }
+      const serviceType: ContactService = property ? "property_main" : entry.id === "marriott" ? "central_reservations" : "general";
+      const contactId = `${entry.id}-${property ? "main" : "reservations"}`;
+      await tx.insert(officialContacts).values({ id: contactId, companyId: entry.id, number: entry.number, region: entry.region, service: entry.service, serviceType }).onConflictDoNothing();
       const [existingContact] = await tx.select().from(officialContacts).where(eq(officialContacts.id, contactId));
       if (existingContact?.number !== entry.number || existingContact.companyId !== entry.id ||
           existingContact.region !== entry.region || existingContact.service !== entry.service) throw new Error("Seed contact conflict");
+      if (entry.id === "marriott" && existingContact.serviceType === "general") {
+        await tx.update(officialContacts).set({ serviceType }).where(eq(officialContacts.id, contactId));
+      } else if (existingContact.serviceType !== serviceType) throw new Error("Seed service scope conflict");
       await tx.insert(contactSources).values({
         id: `${contactId}-2026-11-14`, contactId, sourceUrl: entry.sourceUrl,
         sourceName: `${entry.name} official website`, assertion: "listed", reviewedAt: entry.reviewedAt,

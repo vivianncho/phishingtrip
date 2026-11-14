@@ -13,8 +13,9 @@ after(async () => { await pool.end(); });
 const now = Date.parse("2026-12-01T12:00:00Z");
 function fixture(): ReviewSubject {
   return {
-    company: { id: "review-fixture", name: "Fixture", website: "https://fixture.example", category: "airline" },
-    contact: { id: "review-contact", companyId: "review-fixture", number: "+18002211212", region: "US", service: "Reservations" },
+    company: { id: "review-fixture", name: "Fixture", website: "https://fixture.example", category: "airline",
+      listingType: "organization", brandId: null, propertyCode: null, address: null, city: null, subdivision: null, countryCode: null },
+    contact: { id: "review-contact", companyId: "review-fixture", number: "+18002211212", region: "US", service: "Reservations", serviceType: "general" },
     source: { id: "review-source", contactId: "review-contact", sourceName: "Fixture official website",
       sourceUrl: "https://fixture.example/contact", assertion: "listed",
       reviewedAt: new Date(now - 91 * DAY_MS), expiresAt: new Date(now - DAY_MS) },
