@@ -1,0 +1,36 @@
+diff --git a/api.js b/api.js
+index f4ecb91959f62fc938416a0585458c0a710af161..0ba172e63cbfdccfe1f18dc2e675ac50a70d4964 100644
+--- a/api.js
++++ b/api.js
+@@ -75272,7 +75272,12 @@ var pushSchema = async (imports, drizzleInstance, schemaFilters, tablesFilter, e
+   );
+   const db = {
+     query: async (query, params) => {
+-      const res = await drizzleInstance.execute(sql.raw(query));
++      // Preserve introspection bindings, including composite primary-key queries.
++      const statement = params?.length
++        ? sql.join(query.split(/(\$\d+)/g).map((part) =>
++            /^\$\d+$/.test(part) ? sql`${params[Number(part.slice(1)) - 1]}` : sql.raw(part)), sql.raw(""))
++        : sql.raw(query);
++      const res = await drizzleInstance.execute(statement);
+       return res.rows;
+     }
+   };
+diff --git a/api.mjs b/api.mjs
+index a940272dfb05accf57a472c46c52652ec9ad0080..b8f91386da6a7f4d93ba338be2a9fcfb6a414701 100644
+--- a/api.mjs
++++ b/api.mjs
+@@ -75301,7 +75301,12 @@ var pushSchema = async (imports, drizzleInstance, schemaFilters, tablesFilter, e
+   );
+   const db = {
+     query: async (query, params) => {
+-      const res = await drizzleInstance.execute(sql.raw(query));
++      // Preserve introspection bindings, including composite primary-key queries.
++      const statement = params?.length
++        ? sql.join(query.split(/(\$\d+)/g).map((part) =>
++            /^\$\d+$/.test(part) ? sql`${params[Number(part.slice(1)) - 1]}` : sql.raw(part)), sql.raw(""))
++        : sql.raw(query);
++      const res = await drizzleInstance.execute(statement);
+       return res.rows;
+     }
+   };
