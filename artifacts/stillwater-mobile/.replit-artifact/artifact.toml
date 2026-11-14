@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/"
-title = "Stillwater"
+title = "Phishing Trip"
 description = "An iPhone-first travel phone-number checker with Hook, sourced official contacts, transparent evidence and explicit private tap-to-check lookups."
 version = "1.0.0"
 id = "artifacts/stillwater-mobile"

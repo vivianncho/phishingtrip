@@ -15,7 +15,7 @@
   `;
   const tools = document.createElement("div"); tools.className = "tools";
   const check = document.createElement("button"); check.textContent = "Check selected number";
-  const close = document.createElement("button"); close.textContent = "×"; close.className = "close"; close.ariaLabel = "Remove Stillwater from this page";
+  const close = document.createElement("button"); close.textContent = "×"; close.className = "close"; close.ariaLabel = "Remove Phishing Trip from this page";
   const note = document.createElement("p");
   note.textContent = "Select one phone number in the search result or AI answer, then check it here. Nothing is uploaded yet.";
   note.setAttribute("role", "status");
@@ -29,12 +29,12 @@
   const open = value => {
     frame?.remove();
     frame = document.createElement("iframe");
-    frame.title = "Stillwater selected-number check";
+    frame.title = "Phishing Trip selected-number check";
     frame.referrerPolicy = "no-referrer";
     frame.src = `${api.runtime.getURL("popup.html")}#number=${encodeURIComponent(value)}`;
     frame.setAttribute("allow", "clipboard-write");
     shadow.append(frame);
-    note.textContent = "Review the selected number and country in Stillwater. Only the final Check button sends it.";
+    note.textContent = "Review the selected number and country in Phishing Trip. Only the final Check button sends it.";
   };
   // Never follow the page's tel URL. The user opts in before this listener exists.
   const intercept = event => {

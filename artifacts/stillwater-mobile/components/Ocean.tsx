@@ -51,7 +51,7 @@ export function Page({ children, title, back, tabs = false }: { children: React.
       <View style={s.row}>
         {back ? <Pressable testID="back" accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.canGoBack() ? router.back() : router.replace('/')} style={{ padding: 10, marginLeft: -10 }}><Ionicons name="arrow-back" color={c.primary} size={24} /></Pressable>
           : <Ionicons name="fish-outline" size={29} color={c.primary} />}
-        <View><Copy style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 23, letterSpacing: -1 }}>{title ?? 'stillwater'}</Copy>
+        <View><Copy style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 23, letterSpacing: -1 }}>{title ?? 'Phishing Trip'}</Copy>
           {!title && <Copy style={[s.small, { fontSize: 10, letterSpacing: 0.5 }]}>Sleep with the phishes.</Copy>}</View>
       </View>
       <Pressable testID="help" accessibilityRole="button" accessibilityLabel="Privacy and Safari information" onPress={() => router.push('/help')} style={{ padding: 12 }}><Ionicons name="help-circle-outline" size={24} color={c.mutedForeground} /></Pressable>

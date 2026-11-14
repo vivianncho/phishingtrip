@@ -152,7 +152,7 @@ $("check-form").addEventListener("submit", async event => {
 
 async function init() {
   if (!api?.runtime?.id) {
-    status("error", "Open this page through the installed Stillwater extension. A website preview cannot check numbers.");
+    status("error", "Open this page through the installed Phishing Trip extension. A website preview cannot check numbers.");
     $("check").disabled = true; $("scan").disabled = true; $("inline").disabled = true; return;
   }
   try {

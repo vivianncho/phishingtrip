@@ -102,7 +102,7 @@ export default function CheckScreen() {
               <Copy style={{ fontSize: 12 }}>{company.name}</Copy>
             </Pressable>)}
         </View>}
-      {draft.companyId && !selectedCompany && <Copy style={s.small}>Selected company: {draft.companyId}. You can change this above.</Copy>}
+      {!!draft.companyId && !selectedCompany && <Copy style={s.small}>Selected company: {draft.companyId}. You can change this above.</Copy>}
       {!!error && <ErrorCard text={error} />}
       {pending ? <Busy text="Checking the available evidence…" /> : <Button title={error ? 'Try this check again' : 'Check the number'} icon="shield-checkmark-outline" testID="check-number" onPress={submit} />}
       {pending && <Button title="Cancel check" secondary testID="cancel-check" onPress={clearResult} />}

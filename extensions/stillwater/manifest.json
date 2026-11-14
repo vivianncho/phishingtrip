@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Stillwater — Check before you call",
+  "name": "Phishing Trip — Check before you call",
   "version": "0.1.0",
   "description": "Check a selected travel phone number against sourced contacts before calling. No automatic uploads or browsing history.",
   "permissions": ["activeTab", "scripting", "storage"],
   "optional_host_permissions": ["https://*/*"],
   "action": {
-    "default_title": "Check with Stillwater",
+    "default_title": "Check with Phishing Trip",
     "default_popup": "popup.html",
     "default_icon": { "16": "icons/16.png", "32": "icons/32.png" }
   },

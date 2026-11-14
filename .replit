@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "postgresql-16"]
+modules = ["nodejs-24", "postgresql-16", "python-base-3.13"]
 
 [deployment]
 router = "application"
@@ -21,3 +21,8 @@ timeoutMs = 120000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.development]
+CORS_ORIGINS = "https://d2989347-2ac9-4d89-bae7-38ae2a5272e1-00-18w376doj2nqo.expo.worf.replit.dev"

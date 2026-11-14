@@ -24,4 +24,10 @@ The current design direction is a Safari-only, tap-to-check companion beside pho
 
 **Why:** The user described someone panicking at an airport gate and asked for a fish-themed experience where the fish swims or reacts when a scam is detected.
 
-**How to apply:** Keep copy short, plain, reassuring, and immediately understandable. Preserve the slogan "Sleep with the phishes", dark deep-ocean mood, and compact Check / Directory / My Trips navigation. Make fish motion respond meaningfully to check results without distracting from the explanation. Stillwater is a proposed working name, not a user-confirmed final brand.
+**How to apply:** Keep copy short, plain, reassuring, and immediately understandable. Preserve the slogan "Sleep with the phishes", dark deep-ocean mood, and compact Check / Directory / My Trips navigation. Make fish motion respond meaningfully to check results without distracting from the explanation.
+
+The user chose **Phishing Trip** as the product name, replacing the earlier working name Stillwater.
+
+**Why:** The user explicitly said "Use the name Phishing Trip."
+
+**How to apply:** Use Phishing Trip in visible branding, app display names, extension manifests and guidance. Preserve existing storage keys, package names, routing slugs and URL schemes unless a separate migration is requested, so a branding change does not lose data or break installed links.

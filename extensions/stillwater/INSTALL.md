@@ -1,4 +1,4 @@
-# Install Stillwater
+# Install Phishing Trip
 
 These are real extension files, not the design mockup. They are an initial
 developer build, **not store-approved or tested on an iPhone yet**. The browser
@@ -15,7 +15,7 @@ an administrative key or provider credential in the extension.
 No API service is preconfigured unless an operator passes `--api-origin` at
 build time. Setup explicitly asks for browser permission to your chosen API
 origin. Connecting to someone else's service shares your selected number with
-that operator; use only a Stillwater service you trust.
+that operator; use only a Phishing Trip service you trust.
 
 ## Chrome and Microsoft Edge
 
@@ -23,8 +23,8 @@ that operator; use only a Stillwater service you trust.
    `chromium.zip`).
 2. Open `chrome://extensions` or `edge://extensions`.
 3. Turn on **Developer mode**, choose **Load unpacked**, and select that folder.
-4. Pin Stillwater to the browser toolbar.
-5. Open Stillwater → **Setup**. Enter your public backend origin (for example,
+4. Pin Phishing Trip to the browser toolbar.
+5. Open Phishing Trip → **Setup**. Enter your public backend origin (for example,
    `https://your-domain.example`, without `/api`), click **Save & allow this
    service**, and accept the origin-specific permission prompt.
 
@@ -48,7 +48,7 @@ Apple's current documentation provides a packaging route without a Mac:
    Extension Packager**.
 3. Upload `safari.zip`, which includes the manifest at the archive root.
 4. Review compatibility warnings and test the generated build using TestFlight.
-5. After installing the containing app, enable Stillwater in Safari's extension
+5. After installing the containing app, enable Phishing Trip in Safari's extension
    settings. Invoke it from Safari's page menu.
 6. Configure the same public backend through **Setup** and grant only the site
    access you intend to use.
@@ -66,7 +66,7 @@ With current Xcode installed, run:
 
 ```sh
 xcrun safari-web-extension-packager /absolute/path/to/safari \
-  --app-name Stillwater --bundle-identifier YOUR.REVERSE.DOMAIN.Stillwater \
+  --app-name "Phishing Trip" --bundle-identifier YOUR.REVERSE.DOMAIN.Stillwater \
   --swift --ios-only --copy-resources
 ```
 
@@ -82,7 +82,7 @@ https://developer.apple.com/documentation/safariservices/packaging-a-web-extensi
 ## Check a number directly from search
 
 1. On Google, Bing, or another HTTPS page (including an AI answer), open
-   Stillwater.
+   Phishing Trip.
 2. Choose **Find numbers on this page**. Discovery is local and bounded; it
    returns at most 20 number candidates, not trusted contacts.
 3. Select the number you meant to call, or paste a complete number yourself.
@@ -99,7 +99,7 @@ https://developer.apple.com/documentation/safariservices/packaging-a-web-extensi
 ### Inline option
 
 Choose **Check directly on this page** from the extension. A small local
-Stillwater control appears on that tab. Select a complete number in ordinary
+Phishing Trip control appears on that tab. Select a complete number in ordinary
 text and use the control, or tap a `tel:` phone link. Instead of dialing, the
 helper opens an isolated extension panel. You must still review the number
 and consent before a request is sent. There is no automatic scan-on-load or

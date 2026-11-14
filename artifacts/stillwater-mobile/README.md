@@ -1,6 +1,6 @@
-# Stillwater mobile
+# Phishing Trip mobile
 
-Expo SDK 58 iPhone-first implementation of Stillwater’s accepted visual
+Expo SDK 58 iPhone-first implementation of Phishing Trip’s accepted visual
 identity: deep ocean, mint accents, DM Sans / Space Grotesk, Hook, and
 Check / Directory / My Trips. The separate mockup is not modified or connected.
 Its invented companies and reports are not copied into the real app.

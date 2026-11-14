@@ -1,4 +1,4 @@
-# Stillwater browser extensions
+# Phishing Trip browser extensions
 
 Shared, dependency-free Manifest V3 implementation for Chrome/Edge and a Safari
 Web Extension resource package. This is independent of the fictional React
