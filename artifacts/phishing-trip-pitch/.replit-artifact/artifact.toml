@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/phishing-trip-pitch/"
+title = "Phishing Trip — Product Pitch"
+description = "A nine-slide product pitch for distressed travelers, covering phone-number evidence, Hook, the implementation and its limitations, with a downloadable PowerPoint."
+version = "1.0.0"
+id = "artifacts/phishing-trip-pitch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/phishing-trip-pitch/" ]
+localPort = 23254
+
+[services.development]
+run = "pnpm --filter @workspace/phishing-trip-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/phishing-trip-pitch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/phishing-trip-pitch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23254"
+BASE_PATH = "/phishing-trip-pitch/"

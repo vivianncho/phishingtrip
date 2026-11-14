@@ -11,3 +11,5 @@
 - [Runtime access provisioning](runtime-access-provisioning.md) — schema success does not establish API permissions; provision explicitly and verify restricted access without owner fallback.
 - [Google Places intent](google-places-intent.md) — attributed travel-business discovery with a shared 10-request daily cap; connected status does not establish runtime proxy access.
 - [Native Hook coordinates](native-hook-coordinates.md) — use translated groups instead of nested SVG viewports for native artwork; trim exported wrapper whitespace.
+- [Slide export fidelity](slide-export-fidelity.md) — bake essential artwork mirroring into assets; successful PPTX export does not prove visual equivalence.
+- [Vite peer identity](vite-peer-identity.md) — optional-peer version differences can split Vite plugin types when adding an artifact.

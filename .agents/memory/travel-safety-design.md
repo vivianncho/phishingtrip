@@ -5,6 +5,12 @@ description: User's product audience, brand, and requested interactive fish dire
 
 The product helps stressed travelers check customer service numbers before calling. The intended eventual app is iPhone-first with Expo. The user requested starting with an interactive design frontend, not live verification.
 
+For product pitches, center the user's problem: travelers in distress do not have the luxury of time to fact-check everything. Promise reduced checking effort, not measured time savings or guaranteed safety.
+
+**Why:** The user explicitly made this the central problem and benefit for the product presentation.
+
+**How to apply:** Keep marketing and demos grounded in that distinction; never turn an intended benefit into a measured outcome.
+
 The fish companion is named **Hook**, not Pip or an unnamed fish.
 
 **Why:** The user explicitly requested "Name the fish hook", superseding the earlier unnamed-fish direction.

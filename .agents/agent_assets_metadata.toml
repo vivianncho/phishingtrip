@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "h_nyff6S82ZsnaqvzkFdc"
+uri = "file://.local/outputs/Phishing-Trip-Product-Pitch.pptx"
+type = "slides"
+title = "Phishing Trip — Product Pitch (PPTX)"
+description = "Nine-slide PowerPoint with editable text, Hook artwork, and qualified feature and API claims."
+logical_id = "14dda1d7-a4fd-4494-a600-f893c3609b57"
+content_hash = "sha256:ff38a331d8c2a27d44cff8b155b1172c43c8bf88a6c86eb92cec5724b39253db"
+size = 772189
+mtime_ms = 1794695495557
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:d2989347-2ac9-4d89-bae7-38ae2a5272e1/14dda1d7-a4fd-4494-a600-f893c3609b57/2554eddd-86fd-4a2b-8dae-04b9d8b6fa79"
+storage_version_token = "1794695495952790"
+content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+[[outputs]]
+id = "gPUZ12g2YRZwmAvEWov7V"
+uri = "file://generated-artifacts/phishing-trip-pitch/presenter-notes-and-sources.html"
+type = "html"
+title = "Phishing Trip — Presenter Notes & Sources"
+description = "Slide-by-slide script, implementation sources, provider caveats, and PowerPoint viewing limitations."
+logical_id = "7bc2d85c-ecd1-4f33-bb88-872b498bdf4f"
+content_hash = "sha256:8a3013887493a50c6d835a72e657455dfe0abfc1ef74b8170fdcd60877866a98"
+size = 12808
+mtime_ms = 1794695639809
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:d2989347-2ac9-4d89-bae7-38ae2a5272e1/7bc2d85c-ecd1-4f33-bb88-872b498bdf4f/3bb8795e-3fe3-4009-a967-d6c571dde08a"
+storage_version_token = "1794695649044717"
+content_type = "text/html"

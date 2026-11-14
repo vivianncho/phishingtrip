@@ -1,0 +1,74 @@
+[
+  {
+    "id": "31ea0ed6-a8e3-4c6c-84cb-d6da604afef8",
+    "position": 1,
+    "filepath": "src/pages/slides/Cover.tsx",
+    "title": "Phishing Trip",
+    "description": "Title and Hook introduction",
+    "speakerNotes": "- Introduce Phishing Trip and Hook, the calm fish companion\n- Purpose: less effort checking a travel number before calling; no safety promise\n- Hook art: hook-figma layers composed per stillwater-mobile/components/hookArt.ts\n- Sources: replit.md; artifacts/stillwater-mobile/README.md; components/Hook.tsx"
+  },
+  {
+    "id": "a80e469e-cdfc-435e-a7d9-261229ecb13e",
+    "position": 2,
+    "filepath": "src/pages/slides/Problem.tsx",
+    "title": "Travelers in distress have no time to fact-check everything",
+    "description": "Illustrative traveler scenario",
+    "speakerNotes": "- Scenario is illustrative, not research or a real testimonial\n- Disrupted flight, changed hotel, unfamiliar support number\n- Sources: replit.md (product purpose)"
+  },
+  {
+    "id": "73bfb5a9-7611-49fc-b502-9c9f2ec4ec29",
+    "position": 3,
+    "filepath": "src/pages/slides/Evidence.tsx",
+    "title": "Evidence in one place",
+    "description": "Check result: source, freshness, unknowns",
+    "speakerNotes": "- Right side is a labeled UI illustration, not live results; no real number shown\n- Published-contact match shows source and review/expiry dates; caller identity stays unknown\n- Hook reacts to check state; no runtime AI verdict\n- No reputation data is used\n- Sources: stillwater-mobile/app/(tabs)/index.tsx; components/Hook.tsx"
+  },
+  {
+    "id": "e65ccd3b-1d45-4b62-a992-8dabf025999d",
+    "position": 4,
+    "filepath": "src/pages/slides/Surfaces.tsx",
+    "title": "Three places to turn",
+    "description": "Check, Directory, My Trips, and the extension",
+    "speakerNotes": "- Mobile tabs: Check, Directory, My Trips\n- Extension is separate: Chrome/Edge source plus Safari resources\n- Safari packaging, signing, device validation still required; mobile cannot inspect Safari\n- Sources: index.tsx, directory.tsx, trips.tsx; extensions/stillwater/README.md"
+  },
+  {
+    "id": "66d26eb2-f6fa-4e48-821c-35af1038dd50",
+    "position": 5,
+    "filepath": "src/pages/slides/Journey.tsx",
+    "title": "A deliberate three-step journey",
+    "description": "Enter, read, choose",
+    "speakerNotes": "- Selecting a number only prefills; a tap submits the check\n- The app never places calls automatically\n- Sources: stillwater-mobile/app/(tabs)/index.tsx, directory.tsx"
+  },
+  {
+    "id": "66e64fcb-013a-4d80-845f-dd7e6bcd5300",
+    "position": 6,
+    "filepath": "src/pages/slides/Architecture.tsx",
+    "title": "APIs with distinct jobs",
+    "description": "Mobile/extension to Express API to PostgreSQL, with optional providers",
+    "speakerNotes": "- Google Places API (New) Text Search: direct HTTPS implementation exists; live access not verified; needs config, billing, key restrictions\n- Outbound limit: 10 attempts/day shared only via the same counter DB; not a dollar cap\n- Twilio Lookup v2 Basic: optional, disabled by default, validity/format metadata only, no ownership evidence\n- No scam-report API, no runtime LLM API\n- Sources: api-server/README.md; src/verification/places.ts, twilio.ts; docs/google-places-search.md"
+  },
+  {
+    "id": "03b2fe42-d2d3-4409-b617-46222bf64864",
+    "position": 7,
+    "filepath": "src/pages/slides/Replit.tsx",
+    "title": "Built together in Replit",
+    "description": "How the product was built",
+    "speakerNotes": "- Agent-assisted development with task iteration\n- Shared workspace; Expo and API previews; PostgreSQL; test/build workflows\n- No production deployment and no measured speed claim\n- AI assisted development only, not runtime verdicts\n- Sources: replit.md"
+  },
+  {
+    "id": "e6c4bc7e-6a66-4bbd-8188-eb6586b58632",
+    "position": 8,
+    "filepath": "src/pages/slides/Trust.tsx",
+    "title": "Trust includes uncertainty",
+    "description": "Limits shown, not hidden",
+    "speakerNotes": "- Official-source match is not a safety guarantee; unknown is not fraud\n- No persisted submitted-check history (not a promise of zero transient processing or caching); My Trips stores curated company IDs, not bookings\n- My Trips fetches sources fresh; no offline assurance\n- Physical iPhone, VoiceOver, Safari approval unverified\n- Sources: stillwater-mobile/README.md; trips.tsx; api-server/README.md"
+  },
+  {
+    "id": "64c5d375-e937-4e58-b8bd-0c32cdf94cf2",
+    "position": 9,
+    "filepath": "src/pages/slides/Close.tsx",
+    "title": "Less time fact-checking. More attention for your trip.",
+    "description": "Purpose and demo invitation",
+    "speakerNotes": "- Benefit is the purpose, not a measured impact\n- Demo: pick a number, inspect the evidence, decide the next step\n- Sources: replit.md; stillwater-mobile/README.md"
+  }
+]
