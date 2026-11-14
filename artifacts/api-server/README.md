@@ -687,6 +687,16 @@ A generated internal role column and a
 composite foreign key prevent missing parents, organizations used as brands,
 self-parenting, and deletion or reclassification of a brand that still has
 properties. Non-property organizations do not need location metadata.
+Property codes are unique within a brand, not across brands. Identity comparison
+trims only surrounding ASCII whitespace (space, tab, LF, CR, form feed, vertical
+tab) and folds ASCII A–Z to a–z using a locale-independent comparison.
+Internal whitespace, punctuation, leading zeroes and non-ASCII characters remain
+significant; the original published code is stored unchanged. A partial unique
+index enforces this for property inserts and updates, including direct SQL imports.
+The pre-push audit reports **every** conflicting property ID with
+`duplicate brand/property code`, using the same comparison rule. It stops setup
+and seed imports until an operator resolves the identity from official evidence.
+It never chooses a survivor, merges listings, deletes evidence, or rewrites codes.
 Seed reruns audit identities without changing existing phone evidence or
 source review dates. Neither this audit nor these constraints establish that
 a property's main telephone is a direct front-desk line.

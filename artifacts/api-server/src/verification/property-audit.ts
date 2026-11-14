@@ -1,4 +1,4 @@
-import { db } from "@workspace/db";
+import { db, normalizedPropertyCode } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { supportedCountryCodesSql } from "@workspace/db/countries";
 
@@ -17,6 +17,15 @@ export async function auditPropertyIdentities(database: Pick<typeof db, "execute
     sql`${field === "listing_type" ? sql`'organization'::text` : sql`NULL::text`} AS ${sql.identifier(field)}`), sql`, `);
   const result = await database.execute<{ id: string; issues: string[] }>(sql`
     WITH identities AS (SELECT ${projection} FROM public.companies),
+    duplicate_codes AS (
+      SELECT brand_id, ${normalizedPropertyCode(sql`property_code`)} AS code
+      FROM identities
+      WHERE listing_type = 'property'
+        AND coalesce(brand_id ~ '[^[:space:]]', false)
+        AND coalesce(property_code ~ '[^[:space:]]', false)
+      GROUP BY brand_id, ${normalizedPropertyCode(sql`property_code`)}
+      HAVING count(*) > 1
+    ),
     audited AS (
       SELECT c.id, array_remove(ARRAY[
         CASE WHEN c.listing_type NOT IN ('organization', 'brand', 'property') OR c.listing_type IS NULL
@@ -37,7 +46,11 @@ export async function auditPropertyIdentities(database: Pick<typeof db, "execute
         CASE WHEN c.listing_type = 'property' AND NOT EXISTS (
           SELECT 1 FROM identities b WHERE b.id = c.brand_id
             AND b.listing_type = 'brand' AND b.category = 'hotel'
-        ) THEN 'missing or invalid hotel brand' END
+        ) THEN 'missing or invalid hotel brand' END,
+        CASE WHEN c.listing_type = 'property' AND EXISTS (
+          SELECT 1 FROM duplicate_codes d WHERE d.brand_id = c.brand_id
+            AND d.code = ${normalizedPropertyCode(sql`c.property_code`)}
+        ) THEN 'duplicate brand/property code' END
       ]::text[], NULL) AS issues FROM identities c
     )
     SELECT id, issues FROM audited WHERE cardinality(issues) > 0 ORDER BY id

@@ -1,7 +1,15 @@
-import { sql } from "drizzle-orm";
+import { sql, type SQLWrapper } from "drizzle-orm";
 import { check, foreignKey, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { supportedCountryCodesSql } from "../countries";
+
+// Identity comparison only: preserve the published code in storage. Fold ASCII
+// case and trim ASCII whitespace at the edges; do not guess at punctuation,
+// internal whitespace, leading zeroes, or Unicode equivalence.
+export function normalizedPropertyCode(value: SQLWrapper) {
+  return sql`translate(btrim(${value}, E' \\t\\n\\r\\f\\013'),
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') COLLATE "C"`;
+}
 
 export const companies = pgTable("companies", {
   id: text("id").primaryKey(),
@@ -32,6 +40,9 @@ export const companies = pgTable("companies", {
     AND coalesce(${t.countryCode} ~ '[^[:space:]]', false)
   )`),
   uniqueIndex("companies_brand_identity_unique").on(t.id, t.listingType, t.category),
+  uniqueIndex("companies_property_code_unique")
+    .on(t.brandId, normalizedPropertyCode(t.propertyCode))
+    .where(sql`${t.listingType} = 'property'`),
   foreignKey({
     name: "companies_property_brand_fk",
     columns: [t.brandId, t.propertyBrandType, t.category],

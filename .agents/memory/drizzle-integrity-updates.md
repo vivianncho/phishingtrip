@@ -33,3 +33,5 @@ PostgreSQL's “there is no parameter $1” before any schema changes could run.
 real composite primary key. Keep SQL values bound rather than interpolating
 identifiers or disabling integrity checks. The regression uses a disposable
 schema inside a rolled-back transaction, so it does not modify application data.
+This failure is a tooling limitation, not evidence of corrupt rows or an invalid
+new index. Never delete tables or evidence to bypass it.
