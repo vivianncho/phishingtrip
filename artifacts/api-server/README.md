@@ -706,6 +706,16 @@ and orders the new supporting unique index before its self-referencing foreign
 key. It exits unsuccessfully on any SQL failure. It is development tooling,
 not application startup code or a production migration hook.
 
+The country upgrade rehearsal runs with the API tests, or alone with
+`pnpm --filter @workspace/api-server exec tsx --test src/verification/property-country-upgrade.test.ts`.
+It requires the development database schema to be installed. It copies table
+structures into a unique, transaction-scoped schema without copying or modifying
+application records, restores the legacy nonempty-country check, and exercises
+audit, atomic rejection, explicit correction, and validated installation using
+the current Drizzle constraint expression. Full-row snapshots include contacts,
+source evidence, review history, and review/expiry dates. The schema and fixtures
+are rolled back on both success and failure; no production migration is run.
+
 ## Future reputation-provider evaluation
 
 Public documentation reviewed on 2026-11-14:

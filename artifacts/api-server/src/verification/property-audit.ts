@@ -4,10 +4,10 @@ import { supportedCountryCodesSql } from "@workspace/db/countries";
 
 // Also works before the original property columns have been pushed. Missing
 // columns use their schema defaults, never inferred locations or identities.
-export async function auditPropertyIdentities(database: Pick<typeof db, "execute"> = db) {
+export async function auditPropertyIdentities(database: Pick<typeof db, "execute"> = db, schemaName = "public") {
   const columns = await database.execute<{ column_name: string }>(sql`
     SELECT column_name FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'companies'
+    WHERE table_schema = ${schemaName} AND table_name = 'companies'
   `);
   if (!columns.rows.length) return []; // A new, empty database has no imports to audit.
   const present = new Set(columns.rows.map((row) => row.column_name));
@@ -16,7 +16,7 @@ export async function auditPropertyIdentities(database: Pick<typeof db, "execute
   const projection = sql.join(fields.map((field) => present.has(field) ? sql.identifier(field) :
     sql`${field === "listing_type" ? sql`'organization'::text` : sql`NULL::text`} AS ${sql.identifier(field)}`), sql`, `);
   const result = await database.execute<{ id: string; issues: string[] }>(sql`
-    WITH identities AS (SELECT ${projection} FROM public.companies),
+    WITH identities AS (SELECT ${projection} FROM ${sql.identifier(schemaName)}.companies),
     duplicate_codes AS (
       SELECT brand_id, ${normalizedPropertyCode(sql`property_code`)} AS code
       FROM identities
@@ -58,8 +58,8 @@ export async function auditPropertyIdentities(database: Pick<typeof db, "execute
   return result.rows;
 }
 
-export async function assertPropertyIdentities(database: Pick<typeof db, "execute"> = db) {
-  const invalid = await auditPropertyIdentities(database);
+export async function assertPropertyIdentities(database: Pick<typeof db, "execute"> = db, schemaName = "public") {
+  const invalid = await auditPropertyIdentities(database, schemaName);
   if (invalid.length) {
     throw new Error(`Directory identity audit failed: ${invalid.map((row) => `${row.id}: ${row.issues.join(", ")}`).join("; ")}`);
   }

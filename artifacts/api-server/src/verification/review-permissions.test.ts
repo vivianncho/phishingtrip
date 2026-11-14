@@ -73,7 +73,7 @@ test("separate roles protect private audit history and preserve atomic review wr
   const subject: ReviewSubject = {
     company: { id, name: "Permission fixture", website: "https://fixture.example", category: "airline",
       listingType: "organization", brandId: null, propertyCode: null, address: null,
-      city: null, subdivision: null, countryCode: null },
+      city: null, subdivision: null, countryCode: null, propertyBrandType: null },
     contact: { id, companyId: id, number: "+18002211212", region: "US", service: "Reservations", serviceType: "general" },
     source: { id, contactId: id, sourceName: "Fixture", sourceUrl: "https://fixture.example/contact",
       assertion: "listed", reviewedAt: new Date(now - 86400000), expiresAt: new Date(now) },
