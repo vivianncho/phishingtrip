@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { SafariCompanion, Sheet } from './SafariCompanion';
 import './_group.css';
 import './BrowserCompanion.css';
+import './Stillwater.css';
 
 type IconName = 'check' | 'shield' | 'search' | 'arrow' | 'book' | 'trip' | 'alert' | 'help' | 'close' | 'lock' | 'plus' | 'trash' | 'back' | 'plane' | 'edit' | 'spark';
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
@@ -78,6 +79,20 @@ function Fish({ state, tick, onActivate, label, compact = false }: { state: Fish
 }
 
 export function Stillwater() {
+  const [dive, setDive] = useState(0);
+  useEffect(() => {
+    let pending = 0;
+    const update = () => {
+      cancelAnimationFrame(pending);
+      pending = requestAnimationFrame(() => {
+        const el = document.scrollingElement;
+        setDive(Math.min(1, (el?.scrollTop || 0) / Math.max(200, (el?.scrollHeight || 0) - window.innerHeight)));
+      });
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => { window.removeEventListener('scroll', update); cancelAnimationFrame(pending); };
+  }, []);
   const [tab, setTab] = useState<'check' | 'directory' | 'trips'>('check');
   const [initialNumber, setInitialNumber] = useState<string | undefined>();
   const [query, setQuery] = useState('');
@@ -101,14 +116,15 @@ export function Stillwater() {
   function changeTab(next: typeof tab) { setTab(next); setDetail(null); setRemoveId(null); setInitialNumber(undefined); setEditingTrip(false); }
   function openDirectory(number?: string) { setTab('directory'); setQuery(''); setCategory('All'); setDetail(COMPANIES.find(c => c.number === number) || COMPANIES[0]); }
   const filtered = COMPANIES.filter(c => (category === 'All' || category === c.category) && `${c.name} ${c.number} ${c.category} ${c.detail} ${c.number.replace(/\D/g, '')}`.toLowerCase().includes(query.toLowerCase().trim()));
-  return <div className="stillwater">
+  return <div className="stillwater sw-underwater" style={{ '--sw-dive': dive } as CSSProperties}>
+    <div className="sw-ambient-ocean" aria-hidden="true"><div className="sw-ambient-depth" /><div className="sw-ambient-surface" /><div className="sw-ambient-ray" />{Array.from({ length: 10 }, (_, i) => <i key={i} style={{ '--bubble-x': `${(i * 23 + 7) % 100}%`, '--bubble-y': `${(i * 17 + 20) % 90}%`, '--bubble-delay': `${-i * 2}s` } as CSSProperties} />)}</div>
     <div className="sw-shell">
       <header className="sw-header">
         <div className="sw-brand"><svg className="sw-brand-mark" width="29" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 17C11 7 24 8 29 17c-5 9-18 10-22 0ZM7 17 2 11v12l5-6Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /><circle cx="23" cy="16" r="1.3" fill="currentColor" /><path d="M17 10c0-5 4-6 6-4" stroke="currentColor" strokeWidth="1.4" /><circle cx="24" cy="7" r="2" fill="currentColor" /></svg><div><div className="sw-brand-name">stillwater</div><p className="sw-slogan">Sleep with the phishes.</p></div></div>
         <span className="sw-demo-badge">LOCAL DEMO</span>
       </header>
 
-      {tab === 'check' && <><SafariCompanion initialNumber={initialNumber} exampleContacts={COMPANIES} onOfficialContact={openDirectory} renderFish={(state, tick, onActivate, label) => <Fish state={state} tick={tick} onActivate={onActivate} label={label} compact />} /><button className="bc-link-card" onClick={() => window.open('/__mockup/preview/stillwater/BrowserCompanion', '_blank', 'noopener,noreferrer')}><Icon name="shield" size={23} /><span><strong>Check right where you search.</strong><small>Explore the desktop extension concept.<br />A second look at numbers in AI answers.</small></span><Icon name="arrow" size={17} /></button></>}
+      {tab === 'check' && <><SafariCompanion initialNumber={initialNumber} exampleContacts={COMPANIES} onOfficialContact={openDirectory} renderFish={(state, tick, onActivate, label) => <Fish state={state} tick={tick} onActivate={onActivate} label={label} compact />} /><button className="bc-link-card" onClick={() => window.open('/__mockup/preview/stillwater/UnderwaterBrowser', '_blank', 'noopener,noreferrer')}><Icon name="shield" size={23} /><span><strong>Dive beneath the number.</strong><small>Watch Hook swim to a browser number.<br />Keep the evidence right beside you.</small></span><Icon name="arrow" size={17} /></button><p className="sw-dive-teaser"><Icon name="spark" size={14} />Scroll deeper. Hook keeps you company below the surface.</p></>}
 
       {tab === 'directory' && <main className="sw-screen-enter">
         {detail ? <>

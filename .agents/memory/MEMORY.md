@@ -1,2 +1,3 @@
 - [Travel safety design intent](travel-safety-design.md) — iPhone-first travel number checker with a fish that reacts to phishing results.
+- [Browser extension intent](browser-extension-intent.md) — both Chrome/Edge and iPhone Safari; explicit checks only; Apple also offers browser-based packaging.
 - [Reputation licensing](number-reputation-licensing.md) — enterprise call-label monitoring is not automatically licensed consumer report evidence.

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Stillwater — Check before you call</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header><div><strong>stillwater</strong><small>Sleep with the phishes.</small></div><button id="settings-toggle" type="button" aria-controls="setup" aria-expanded="false">Setup</button></header>
+  <main>
+    <section id="setup" hidden aria-labelledby="setup-heading">
+      <h2 id="setup-heading">Connect your evidence service</h2>
+      <p>Use the public HTTPS address of your Stillwater backend. Only connect to a service you trust with a selected number.</p>
+      <form id="setup-form">
+        <label for="api-origin">Backend address</label>
+        <input id="api-origin" type="url" placeholder="https://your-published-backend.example" autocomplete="off" required>
+        <button class="primary" type="submit">Save &amp; allow this service</button>
+      </form>
+      <p class="muted">The browser will request access to this service only. This does not grant ongoing access to search pages.</p>
+      <button id="disconnect" type="button">Disconnect &amp; remove saved settings</button>
+      <p id="setup-status" role="status"></p>
+    </section>
+    <section aria-labelledby="main-heading">
+      <p class="eyebrow">One step at a time.</p>
+      <h1 id="main-heading">Before you call,<br><span>check the waters.</span></h1>
+      <div id="hook" class="fish" data-state="idle"><img src="icons/128.png" alt="Hook, your fish companion" width="96" height="96"><p id="hook-caption">Hook is here with you.</p></div>
+      <p>Search results and AI answers can be wrong. Check the number, not where it appears.</p>
+      <div class="page-tools">
+        <button id="scan" type="button">Find numbers on this page</button>
+        <button id="inline" type="button">Check directly on this page</button>
+      </div>
+      <p id="page-status" class="muted" role="status">Page access happens only when you ask. No page text is sent.</p>
+      <div id="candidates" class="candidates" aria-label="Phone numbers found locally"></div>
+      <form id="check-form">
+        <label for="phone">Number to check</label>
+        <input id="phone" type="tel" inputmode="tel" placeholder="+1 800 221 1212" maxlength="64" autocomplete="off" required>
+        <label for="country">Country for national numbers</label>
+        <input id="country" type="text" placeholder="US, GB, FR… or leave blank for + numbers" maxlength="2" pattern="[A-Za-z]{2}" autocomplete="off" autocapitalize="characters">
+        <p class="muted">Choose the number’s country. We do not infer it from your location.</p>
+        <details id="directory">
+          <summary>Which travel company? <span class="muted">(optional)</span></summary>
+          <label for="category">Travel category</label>
+          <select id="category"><option value="">All travel</option><option value="hotel">Hotels</option><option value="vacation_rental">Vacation rentals</option><option value="car_rental">Car rentals</option><option value="booking_service">Booking services</option><option value="airline">Airlines</option><option value="rail_transfer">Rail &amp; transfers</option><option value="cruise">Cruises</option><option value="tour">Tours</option></select>
+          <label for="company-search">Company or hotel name</label>
+          <input id="company-search" type="search" maxlength="80" placeholder="Search the official directory" autocomplete="off">
+          <button id="load-companies" type="button">Search travel directory</button>
+          <p id="directory-status" class="muted" role="status">Only your typed directory search is sent when you search.</p>
+          <label for="company">The company you intend to call</label>
+          <select id="company"><option value="">Not selected — check number only</option></select>
+          <button id="more-companies" type="button" hidden>Load more companies</button>
+        </details>
+        <label class="consent"><input id="consent" type="checkbox" required><span>Send only this number, country, and selected company to my connected service.</span></label>
+        <p id="destination" class="muted"></p>
+        <button id="check" class="primary" type="submit">Check this number</button>
+        <p id="error" class="error" role="alert"></p>
+      </form>
+      <section id="result" hidden aria-live="polite" aria-atomic="true" tabindex="-1"></section>
+    </section>
+    <footer>Not a guarantee of safety. Caller ID can be spoofed. Unknown does not mean scam. No number-check history, page URLs, or browsing text is saved by this extension.</footer>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
