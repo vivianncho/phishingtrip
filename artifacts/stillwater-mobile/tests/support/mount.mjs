@@ -24,12 +24,13 @@ const compiled = await build({
       export { default as CompanyScreen } from './app/company/[id]';
       export { CompanionProvider, useCompanion } from './context/Companion';
       export { Hook } from './components/Hook';
+      export { PlacesSearch } from './components/PlacesSearch';
       export * from './tests/support/native';
     `,
     resolveDir: app,
     loader: 'tsx',
   },
-  bundle: true, write: false, platform: 'node', format: 'esm', jsx: 'automatic',
+  bundle: true, write: false, platform: 'node', format: 'esm', jsx: 'automatic', loader: { '.png': 'dataurl' },
   plugins: [{
     name: 'native-boundaries',
     setup(builder) {

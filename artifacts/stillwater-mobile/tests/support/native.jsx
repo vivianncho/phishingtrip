@@ -64,7 +64,7 @@ export const Animated = {
   },
   View: 'AnimatedView',
 };
-export const View = 'View', Text = 'Text', TextInput = 'TextInput', Pressable = 'Pressable', ScrollView = 'ScrollView';
+export const View = 'View', Text = 'Text', TextInput = 'TextInput', Pressable = 'Pressable', ScrollView = 'ScrollView', Image = 'Image';
 export function Modal({ visible, children }) { return visible ? <View>{children}</View> : null; }
 export const Ionicons = 'Ionicons';
 export const Svg = 'Svg', Circle = 'Circle', Defs = 'Defs', Ellipse = 'Ellipse', G = 'G',

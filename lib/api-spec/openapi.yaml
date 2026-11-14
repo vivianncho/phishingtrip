@@ -48,6 +48,27 @@ paths:
         "415": { $ref: "#/components/responses/UnsupportedMedia" }
         "429": { $ref: "#/components/responses/RateLimited" }
         "503": { $ref: "#/components/responses/Unavailable" }
+  /places/search:
+    post:
+      operationId: searchTravelPlaces
+      summary: Explicit, ephemeral Google Places discovery, not verification
+      description: Sends the submitted search to Google only when requested. Limited to 10 upstream attempts daily across all users; failures count. Results are not added to the official directory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlaceSearchInput" }
+      responses:
+        "200":
+          description: Google Maps listings; not independently verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlaceSearchResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/Unavailable" }
   /companies:
     get:
       operationId: listCompanies
@@ -154,6 +175,39 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ApiProblem" }
   schemas:
+    PlaceSearchInput:
+      type: object
+      additionalProperties: false
+      required: [query]
+      properties:
+        query: { type: string, minLength: 3, maxLength: 120 }
+    PlaceAttribution:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        uri: { type: string }
+    TravelPlace:
+      type: object
+      required: [id, name, address, attributions]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        website: { type: string }
+        mapsUrl: { type: string }
+        attributions:
+          type: array
+          items: { $ref: "#/components/schemas/PlaceAttribution" }
+    PlaceSearchResult:
+      type: object
+      required: [items, checkedAt]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TravelPlace" }
+        checkedAt: { type: string, format: date-time }
     ListingType:
       type: string
       enum: [organization, brand, property]

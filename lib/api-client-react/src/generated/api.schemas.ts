@@ -5,6 +5,34 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface PlaceSearchInput {
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  query: string;
+}
+
+export interface PlaceAttribution {
+  name: string;
+  uri?: string;
+}
+
+export interface TravelPlace {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  mapsUrl?: string;
+  attributions: PlaceAttribution[];
+}
+
+export interface PlaceSearchResult {
+  items: TravelPlace[];
+  checkedAt: string;
+}
+
 export type ListingType = typeof ListingType[keyof typeof ListingType];
 
 

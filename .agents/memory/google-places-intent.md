@@ -21,6 +21,19 @@ Google usage charges may apply and that a request cap is not a dollar cap.
 **How to apply:** Reserve the account-wide allowance before every outbound
 attempt, including failures and retries; do not create new allowances per
 replica, connection or API-key rotation. Use explicit user-triggered searches.
+Independent counter databases are independent allowances: before enabling a
+second live environment, establish a shared budget authority or disable live
+Places in one environment. A database-local limit is not Google-account-wide.
+
+Keep Google search text and listings ephemeral, including on the client.
+
+**Why:** Discovery must not silently become a saved contact directory or check
+history; Google also restricts caching and storage of its content.
+
+**How to apply:** Use the generated abortable client rather than a cached query
+for this explicit action. Clear text and results on blur/background, ignore
+late responses and require another explicit tap to submit a listed phone to
+Check. Retain Google and third-party attribution with all displayed results.
 
 Verify runtime API access independently of integration connection status.
 

@@ -34,6 +34,8 @@ import type {
   HealthStatus,
   ListCompaniesParams,
   NotFoundResponse,
+  PlaceSearchInput,
+  PlaceSearchResult,
   RateLimitedResponse,
   TooLargeResponse,
   TravelSafetyGuidance,
@@ -257,6 +259,95 @@ export const useCheckNumber = <TError = ErrorType<BadRequestResponse | NotFoundR
         TContext
       > => {
       return useMutation(getCheckNumberMutationOptions(options), queryClient);
+    }
+
+export const getSearchTravelPlacesUrl = () => {
+
+
+
+
+  return `/api/places/search`
+}
+
+/**
+ * Sends the submitted search to Google only when requested. Limited to 10 upstream attempts daily across all users; failures count. Results are not added to the official directory.
+ * @summary Explicit, ephemeral Google Places discovery, not verification
+ */
+export const searchTravelPlaces = async (placeSearchInput: PlaceSearchInput, options?: Parameters<typeof customFetch>[1]): Promise<PlaceSearchResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PlaceSearchResult>(getSearchTravelPlacesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(placeSearchInput)
+  }
+);}
+
+
+
+
+
+export const getSearchTravelPlacesMutationKey = () => ['searchTravelPlaces'] as const;
+
+export const getSearchTravelPlacesMutationOptions = <TError = ErrorType<BadRequestResponse | TooLargeResponse | UnsupportedMediaResponse | RateLimitedResponse | UnavailableResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchTravelPlaces>>, TError,SearchTravelPlacesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof searchTravelPlaces>>, TError,SearchTravelPlacesMutationVariables, TContext> => {
+
+const mutationKey = getSearchTravelPlacesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchTravelPlaces>>, SearchTravelPlacesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  searchTravelPlaces(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchTravelPlacesMutationResult = NonNullable<Awaited<ReturnType<typeof searchTravelPlaces>>>
+    export type SearchTravelPlacesMutationBody = BodyType<PlaceSearchInput>
+    export type SearchTravelPlacesMutationError = ErrorType<BadRequestResponse | TooLargeResponse | UnsupportedMediaResponse | RateLimitedResponse | UnavailableResponse>
+    export type SearchTravelPlacesMutationVariables = {data: BodyType<PlaceSearchInput>}
+
+    /**
+ * @summary Explicit, ephemeral Google Places discovery, not verification
+ */
+export const useSearchTravelPlaces = <TError = ErrorType<BadRequestResponse | TooLargeResponse | UnsupportedMediaResponse | RateLimitedResponse | UnavailableResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchTravelPlaces>>, TError,SearchTravelPlacesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof searchTravelPlaces>>,
+        TError,
+        SearchTravelPlacesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSearchTravelPlacesMutationOptions(options), queryClient);
     }
 
 export const getListCompaniesUrl = (params?: ListCompaniesParams,) => {

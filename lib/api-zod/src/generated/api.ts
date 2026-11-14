@@ -110,6 +110,36 @@ export const CheckNumberResponse = zod.object({
 
 
 /**
+ * Sends the submitted search to Google only when requested. Limited to 10 upstream attempts daily across all users; failures count. Results are not added to the official directory.
+ * @summary Explicit, ephemeral Google Places discovery, not verification
+ */
+export const searchTravelPlacesBodyQueryMin = 3;
+export const searchTravelPlacesBodyQueryMax = 120;
+
+
+
+export const SearchTravelPlacesBody = zod.object({
+  "query": zod.string().min(searchTravelPlacesBodyQueryMin).max(searchTravelPlacesBodyQueryMax)
+})
+
+export const SearchTravelPlacesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "phone": zod.string().optional(),
+  "website": zod.string().optional(),
+  "mapsUrl": zod.string().optional(),
+  "attributions": zod.array(zod.object({
+  "name": zod.string(),
+  "uri": zod.string().optional()
+}))
+})),
+  "checkedAt": zod.string().datetime({"offset":true})
+})
+
+
+/**
  * Search canonical names, locations and curated source-backed property aliases.
  * Aliases help discovery only; every result retains its exact property ID.
  * Ambiguous searches return all matching listings in stable ID order, not a
