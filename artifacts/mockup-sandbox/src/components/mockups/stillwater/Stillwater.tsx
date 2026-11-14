@@ -120,7 +120,7 @@ export function Stillwater() {
     <div className="sw-ambient-ocean" aria-hidden="true"><div className="sw-ambient-depth" /><div className="sw-ambient-surface" /><div className="sw-ambient-ray" />{Array.from({ length: 10 }, (_, i) => <i key={i} style={{ '--bubble-x': `${(i * 23 + 7) % 100}%`, '--bubble-y': `${(i * 17 + 20) % 90}%`, '--bubble-delay': `${-i * 2}s` } as CSSProperties} />)}</div>
     <div className="sw-shell">
       <header className="sw-header">
-        <div className="sw-brand"><svg className="sw-brand-mark" width="29" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 17C11 7 24 8 29 17c-5 9-18 10-22 0ZM7 17 2 11v12l5-6Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /><circle cx="23" cy="16" r="1.3" fill="currentColor" /><path d="M17 10c0-5 4-6 6-4" stroke="currentColor" strokeWidth="1.4" /><circle cx="24" cy="7" r="2" fill="currentColor" /></svg><div><div className="sw-brand-name">stillwater</div><p className="sw-slogan">Sleep with the phishes.</p></div></div>
+        <div className="sw-brand"><svg className="sw-brand-mark" width="29" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 17C11 7 24 8 29 17c-5 9-18 10-22 0ZM7 17 2 11v12l5-6Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /><circle cx="23" cy="16" r="1.3" fill="currentColor" /><path d="M17 10c0-5 4-6 6-4" stroke="currentColor" strokeWidth="1.4" /><circle cx="24" cy="7" r="2" fill="currentColor" /></svg><div><div className="sw-brand-name">Phishing Trip</div><p className="sw-slogan">Sleep with the phishes.</p></div></div>
         <span className="sw-demo-badge">LOCAL DEMO</span>
       </header>
 
