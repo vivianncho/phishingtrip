@@ -72,3 +72,16 @@ empty and reset states neutral, official matches green, and never relabel
 missing evidence as scam reports.
 The user also requested bold red words for unverified results so the caution
 is apparent without relying on the lantern alone; preserve that emphasis.
+
+Help travelers recover from an unverified number by describing their travel
+problem and finding other contact options.
+
+**Why:** The user specifically gave changing a flight time as an example and
+requested viable alternative phone contacts using the API connection.
+
+**How to apply:** Prefer current sourced contacts for the named company and
+property. Keep Google listings separate and explicitly unverified. Exclude
+the number just checked from replacement suggestions, do not infer that a
+main line is a specialist department, and require an explicit confirmation
+before handing a number to the phone app. Keep free-form problem text local
+unless a future feature gets explicit consent to send it to another service.

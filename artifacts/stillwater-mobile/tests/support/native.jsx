@@ -9,10 +9,11 @@ export const events = {
   announcements: [],
   reads: [],
   writes: [],
+  calls: [],
   storage: new Map(),
 };
 export function reset() {
-  for (const key of ['routes', 'announcements', 'reads', 'writes']) events[key].length = 0;
+  for (const key of ['routes', 'announcements', 'reads', 'writes', 'calls']) events[key].length = 0;
   events.storage.clear();
 }
 export function appState(state) {
@@ -49,6 +50,7 @@ export const storage = {
   async setItem(key, value) { events.writes.push([key, value]); events.storage.set(key, value); },
 };
 export const Platform = { OS: 'ios' };
+export const Linking = { openURL: async url => { events.calls.push(url); } };
 export const AccessibilityInfo = {
   announceForAccessibility: text => events.announcements.push(text),
   isReduceMotionEnabled: async () => true,

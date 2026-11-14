@@ -9,6 +9,7 @@ import { Hook } from '@/components/Hook';
 import { Busy, Button, Contact, Copy, ErrorCard, Page, Providers, Source, dateText, s } from '@/components/Ocean';
 import { INTERNATIONAL, makeCheckInput, problemText } from '@/lib/checks';
 import { useColors } from '@/hooks/useColors';
+import { TravelHelp } from '@/components/TravelHelp';
 
 export default function CheckScreen() {
   const colors = useColors();
@@ -123,6 +124,8 @@ export default function CheckScreen() {
         <Copy style={s.small}>Caller ID can be spoofed. A listed number does not authenticate an incoming caller.</Copy>
         <Button title="Why this result?" testID="open-evidence" secondary icon="reader-outline" onPress={() => setEvidenceOpen(true)} />
       </View>
+      {result.outcome !== 'official_match' && <TravelHelp excludedNumber={result.normalizedNumber}
+        initialCompany={selectedCompany?.name ?? ''} onSelect={chooseAlternative} />}
       <Providers providers={result.providers} checkedAt={result.checkedAt} />
       <Copy style={s.h2}>Your next step</Copy>
       {result.alternatives.length ? <><Copy style={s.muted}>Current contacts from official sources. Confirm the region and service before calling.</Copy>

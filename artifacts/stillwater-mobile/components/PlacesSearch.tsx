@@ -5,6 +5,8 @@ import { searchTravelPlaces, type PlaceSearchResult } from '@workspace/api-clien
 import { Busy, Button, Copy, WebLink, s } from './Ocean';
 import { useCompanion } from '@/context/Companion';
 import { useColors } from '@/hooks/useColors';
+import { CallOption } from './CallOption';
+import { samePhone } from '@/lib/travelHelp';
 
 function searchError(error: unknown): string {
   const problem = error as { status?: number; data?: { code?: string } };
@@ -20,10 +22,12 @@ function searchError(error: unknown): string {
 
 /** Uses the generated imperative client, like Check, so blur/background can abort
  * requests and discard results rather than putting Google content in a cache. */
-export function PlacesSearch() {
+export function PlacesSearch({ initialQuery = '', excludedNumber, onUseNumber, allowCalls = false }: {
+  initialQuery?: string; excludedNumber?: string; onUseNumber?: (number: string) => void; allowCalls?: boolean;
+}) {
   const colors = useColors();
   const { setDraft } = useCompanion();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<PlaceSearchResult | null>(null);
   const [error, setError] = useState('');
@@ -74,7 +78,7 @@ export function PlacesSearch() {
     {result && <View testID="places-results" style={{ gap: 12 }}>
       <Copy style={s.small}>Results for “{submitted}” · not independently verified</Copy>
       {!result.items.length && <Copy>No listing found. This is not evidence of fraud. Try your booking confirmation or the company’s own app.</Copy>}
-      {result.items.map(place => <View key={place.id} style={[s.card, { gap: 8 }]}>
+      {result.items.filter(place => !excludedNumber || !place.phone || !samePhone(place.phone, excludedNumber)).map(place => <View key={place.id} style={[s.card, { gap: 8 }]}>
         <Copy style={s.h2}>{place.name}</Copy>
         {!!place.address && <Copy style={s.small}>{place.address}</Copy>}
         <Copy selectable>{place.phone ?? 'No phone listed'}</Copy>
@@ -85,10 +89,14 @@ export function PlacesSearch() {
           ? <WebLink key={i} url={a.uri} title={a.name} />
           : <Copy key={i} style={s.small}>{a.name}</Copy>)}
         {place.phone && <Button testID={`check-place-${place.id}`} title="Use number in Check" secondary onPress={() => {
+          if (onUseNumber) { onUseNumber(place.phone!); return; }
           setDraft({ number: place.phone!, country: '', companyId: '' });
           router.push('/');
         }} />}
+        {allowCalls && place.phone && <CallOption number={place.phone} listed />}
       </View>)}
+      {excludedNumber && result.items.length > 0 && result.items.every(place => !!place.phone && samePhone(place.phone, excludedNumber)) &&
+        <Copy>No different number found. Use your booking confirmation or the company’s official website instead.</Copy>}
       <Copy style={s.small}>Google orders results by relevance, including your search terms, location and business prominence.</Copy>
     </View>}
     <View style={{ paddingTop: 10, paddingHorizontal: 10, paddingBottom: 5 }}>

@@ -80,7 +80,7 @@ export function result(number = A, overrides = {}) {
     providers, metadata: null, alternatives: [contact], evidence: [], limitations: [], ...overrides,
   };
 }
-export async function mount(t) {
+export async function mount(t, { directoryContacts = false } = {}) {
   mobile.reset();
   const originalFetch = globalThis.fetch;
   const requests = [];
@@ -105,7 +105,7 @@ export async function mount(t) {
       return Response.json(company);
     }
     return Response.json({
-      items: [{ ...company, contacts: [] }, { ...company, id: 'other', name: 'Other', contacts: [] }],
+      items: [{ ...company, contacts: directoryContacts ? [contact] : [] }, { ...company, id: 'other', name: 'Other', contacts: [] }],
       total: 2, limit: 50, offset: 0, nextOffset: null,
     });
   };
