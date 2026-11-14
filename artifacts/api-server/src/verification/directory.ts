@@ -1,18 +1,13 @@
 import { db, companies, officialContacts, contactSources } from "@workspace/db";
 import { asc, eq, ilike, and, sql } from "drizzle-orm";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
-import { SOURCE_MAX_AGE_DAYS } from "./policy";
+import { evidenceFreshness, officialProvenance } from "./source-policy";
+export { evidenceFreshness } from "./source-policy";
 
 export interface Directory {
   list(search: string, category: string | undefined, limit: number, offset: number): Promise<{ items: Company[]; total: number }>;
   get(id: string): Promise<Company | null>;
   matching(number: string): Promise<OfficialContact[]>;
-}
-
-export function evidenceFreshness(e: Pick<Evidence, "reviewedAt" | "expiresAt">, now = Date.now()): Evidence["freshness"] {
-  const reviewed = Date.parse(e.reviewedAt), expires = Date.parse(e.expiresAt);
-  if (!Number.isFinite(reviewed) || !Number.isFinite(expires) || reviewed > now || expires <= reviewed) return "unknown";
-  return now < Math.min(expires, reviewed + SOURCE_MAX_AGE_DAYS * 86400000) ? "current" : "stale";
 }
 
 export function contactFreshness(sources: Evidence[]): Evidence["freshness"] {
@@ -43,10 +38,7 @@ export const directory: Directory = {
     // Invalid provenance is visible but cannot support official matching.
     for (const c of contacts) {
       for (const e of c.sources) {
-        try {
-          const source = new URL(e.sourceUrl), official = new URL(company.website);
-          if (source.protocol !== "https:" || source.hostname !== official.hostname) e.freshness = "unknown";
-        } catch { e.freshness = "unknown"; }
+        if (!officialProvenance(e.sourceUrl, company.website)) e.freshness = "unknown";
       }
       c.freshness = contactFreshness(c.sources);
     }

@@ -4,6 +4,8 @@ import { logger } from "../lib/logger";
 import { SOURCE_MAX_AGE_DAYS } from "./policy";
 import { eq } from "drizzle-orm";
 import type { TravelCategory } from "@workspace/api-zod";
+import { pathToFileURL } from "node:url";
+import { officialProvenance } from "./source-policy";
 
 // Human-reviewed against the official sites at the recorded instant. Rerunning is NOT a new review.
 export const reviewedAt = new Date("2026-11-14T20:34:24Z");
@@ -46,12 +48,12 @@ const websiteOnlySeed = [
   { id: "viator", name: "Viator", category: "tour", website: "https://www.viator.com/help" },
 ] as const;
 
-async function seed() {
-  await db.transaction(async (tx) => {
+export async function seedDirectory(database: Pick<typeof db, "transaction"> = db) {
+  await database.transaction(async (tx) => {
     for (const entry of [...airlineSeed.map(entry => ({ ...entry, category: "airline" as const, reviewedAt })), ...travelSeed.map(entry => ({ ...entry, reviewedAt: travelReviewedAt }))]) {
       if (parsePhoneNumberFromString(entry.number)?.number !== entry.number ||
           !parsePhoneNumberFromString(entry.number)?.isValid() ||
-          new URL(entry.sourceUrl).origin !== new URL(entry.website).origin) throw new Error("Invalid seed provenance");
+          !officialProvenance(entry.sourceUrl, entry.website)) throw new Error("Invalid seed provenance");
       await tx.insert(companies).values({ id: entry.id, name: entry.name, website: entry.website, category: entry.category satisfies TravelCategory }).onConflictDoNothing();
       const [existingCompany] = await tx.select().from(companies).where(eq(companies.id, entry.id));
       if (existingCompany?.website !== entry.website || existingCompany.category !== entry.category) throw new Error("Seed company provenance conflict");
@@ -73,6 +75,8 @@ async function seed() {
     }
   });
 }
-seed().then(() => logger.info("Official travel directory seed applied"))
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+seedDirectory().then(() => logger.info("Official travel directory seed applied"))
   .catch(() => { logger.error("Directory seed failed; verify database setup"); process.exitCode = 1; })
   .finally(() => pool.end());
+}

@@ -187,7 +187,8 @@ Initial contacts were reviewed on the airlines' own websites on
 Freshness expires at the **earlier** of explicit `expiresAt` and 90 days after
 `reviewedAt`. Future, invalid, reversed, missing, or off-domain provenance
 cannot support an official match. At exactly expiry a source is stale.
-The directory verifies source HTTPS hostname against the company website.
+The directory verifies the source's HTTPS origin against the company website
+and rejects URLs with embedded credentials.
 Only exact E.164 equality to a currently listed, source-backed contact can
 produce `official_match`; an optional company claim scopes the match.
 
@@ -215,9 +216,74 @@ To refresh/add a contact:
 4. Follow the pattern in `src/verification/seed.ts`. Its import is transactional,
    idempotent, does not fetch sites, refuses conflicting existing contact
    definitions, and **never changes review dates just because it is rerun**.
-   A fresh review requires an explicit reviewed code/data change. Resolve
+    A fresh review requires an explicit human review (use the command below for
+    an existing contact). Resolve
    superseded source assertions in the same transaction.
 5. Run the seed/import, directory and decision tests, and inspect the API.
+
+### Operator maintenance command
+
+Apply the schema with `pnpm --filter @workspace/db run push` in development.
+The existing post-merge setup does this automatically. No public write endpoint
+is exposed: these commands require trusted shell access and database access.
+Do not run the write command as an unattended scheduled job.
+
+```sh
+# Read-only; default warning window is 14 days.
+pnpm --filter @workspace/api-server run review:directory queue
+pnpm --filter @workspace/api-server run review:directory queue --days 30
+# Explicit human action, after visiting and checking the official page:
+pnpm --filter @workspace/api-server run review:directory review /absolute/path/review.json
+```
+
+The queue prints JSON for expiring, stale, disputed, invalid-date and
+invalid-provenance sources, including the company, exact contact/scope, recorded
+dates, effective expiry, reasons and `expectedFingerprint`. `--days` accepts
+0–90. Neither listing the queue, fetching a website, nor rerunning the seed
+changes review dates. Scheduling the **queue** command is safe; it does not
+perform reviews or send notifications.
+
+Create a JSON file with these fields (replace every illustrative value with
+the current queue values and the actual human review):
+
+```json
+{
+  "sourceId": "delta-reservations-2026-11-14",
+  "expectedFingerprint": "<copy the 64-character fingerprint from the queue>",
+  "reviewer": "operator-handle",
+  "note": "Manually confirmed the number, region and reservations service on the official page.",
+  "confirmedHumanReview": true,
+  "number": "+18002211212",
+  "region": "United States",
+  "service": "General sales and reservations",
+  "sourceUrl": "https://www.delta.com/us/en/need-help/overview",
+  "assertion": "listed",
+  "reviewedAt": "2026-12-01T12:00:00Z",
+  "expiresAt": "2027-03-01T12:00:00Z"
+}
+```
+
+Use a stable internal operator handle, not personal contact details. Do not put
+traveler numbers, browsing history or secrets in notes. Timestamps must include
+a timezone; the human review instant must be newer than the stored review and
+not in the future. Expiry must be strictly after review and no more than 90 days
+later; shorter periods are supported. The command does not silently substitute
+the execution time for the review time. An already expired review stays stale.
+
+The review confirms the exact stored E.164 number, region and service. It can
+update the official source URL on the same approved origin and explicitly set
+`listed` or `disputed`. Use `disputed` to withdraw an unsupported listing; it
+blocks an official match even after expiry. Resolving one source does not clear
+other disputes or conflicting company assignments. A changed number, company,
+region or service needs a separately reviewed import, not this renewal command.
+
+A transaction locks the source, contact and company, validates the queue
+fingerprint, updates the evidence, and appends a before/after audit record with
+the operator handle, note and separate server-recorded time. Validation failure
+writes nothing. A changed source or replay is rejected; reload the queue and
+review the new state. Audit records are separate from consumer evidence and do
+not themselves establish an official match. Directory evidence is read from the
+database on each check; verdicts recheck expiry on every response.
 
 No reputation source or public report-submission path exists. The pure
 decision function accepts report evidence only for isolated fixture tests.

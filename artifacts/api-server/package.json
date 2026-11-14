@@ -9,7 +9,8 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test src/verification/*.test.ts",
-    "seed:directory": "tsx src/verification/seed.ts"
+    "seed:directory": "tsx src/verification/seed.ts",
+    "review:directory": "tsx src/verification/review-command.ts"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

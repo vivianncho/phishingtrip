@@ -1,4 +1,5 @@
 export const SOURCE_MAX_AGE_DAYS = 90;
+export const SOURCE_REVIEW_WARNING_DAYS = 14;
 export const CACHE_TTL_SECONDS = 300;
 export const CACHE_MAX_ENTRIES = 200;
 export const limitations = [

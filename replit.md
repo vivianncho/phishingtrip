@@ -10,6 +10,7 @@ Travel phone-number evidence checker with a separate fish-companion design proto
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run seed:directory` — idempotent sourced travel seed; does not refresh review dates
+- `pnpm --filter @workspace/api-server run review:directory queue` — read-only operator queue; use `review <file.json>` for explicit human reviews (see API README)
 - `pnpm --filter @workspace/api-server test` — decision, route, privacy and provider tests (requires seeded dev database)
 - Required env: `DATABASE_URL` — Postgres connection string
 - `node --test extensions/stillwater/tests/*.test.mjs` — extension privacy, validation, UI-controller and package tests

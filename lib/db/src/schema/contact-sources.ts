@@ -7,6 +7,7 @@ export const contactSources = pgTable("contact_sources", {
   contactId: text("contact_id").notNull().references(() => officialContacts.id),
   sourceUrl: text("source_url").notNull(),
   sourceName: text("source_name").notNull(),
+  // Human review instant only. Never default to now or update on fetch/seed.
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   assertion: text("assertion", { enum: ["listed", "disputed"] }).notNull(),

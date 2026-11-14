@@ -20,3 +20,4 @@
 export * from "./companies";
 export * from "./official-contacts";
 export * from "./contact-sources";
+export * from "./contact-source-reviews";
