@@ -5,7 +5,7 @@ import pino from "pino";
 import request from "supertest";
 import { Router } from "express";
 import { pool } from "@workspace/db";
-import { CheckNumberResponse, GetCapabilitiesResponse, GetCompanyResponse, ListCompaniesResponse } from "@workspace/api-zod";
+import { CheckNumberResponse, GetCapabilitiesResponse, GetCompanyResponse, ListCompaniesResponse, GetTravelSafetyResponse } from "@workspace/api-zod";
 import { createApp } from "../app";
 import healthRouter from "../routes/health";
 import { verificationRouter } from "../routes/verification";
@@ -69,6 +69,65 @@ test("route checks exact normalized evidence, wrong company, ambiguity and no re
   assert.equal(unknown.evidence.some((e: { kind: string }) => e.kind === "reputation_report"), false);
   const ambiguous = await request(app).post("/api/checks").send({ phoneNumber: "8002211212" }).expect(400);
   assert.equal(ambiguous.body.code, "COUNTRY_REQUIRED");
+});
+test("travel categories filter actual directory rows and sourced contacts match beyond airlines", async () => {
+  const app = appFor();
+  const cases = [
+    ["hotel", "marriott", "+18882362427"],
+    ["vacation_rental", "marriott-homes-villas", "+18337642004"],
+    ["car_rental", "enterprise", "+18552669289"],
+    ["rail_transfer", "amtrak", "+18008727245"],
+    ["cruise", "royal-caribbean", "+18665627625"],
+    ["booking_service", "booking", null],
+    ["tour", "viator", null],
+  ] as const;
+  for (const [category, id, number] of cases) {
+    const page = (await request(app).get(`/api/companies?category=${category}`).expect(200)).body;
+    ListCompaniesResponse.parse(page);
+    assert.ok(page.items.some((c: { id: string }) => c.id === id));
+    assert.ok(page.items.every((c: { category: string }) => c.category === category));
+    const company = (await request(app).get(`/api/companies/${id}`).expect(200)).body;
+    GetCompanyResponse.parse(company);
+    if (!number) assert.equal(company.contacts.length, 0);
+    const checked = (await request(app).post("/api/checks").send({
+      phoneNumber: number ?? "+442079460018", claimedCompanyId: id,
+    }).expect(200)).body;
+    CheckNumberResponse.parse(checked);
+    const current = Date.now() < Date.parse("2027-02-12T20:46:23Z");
+    assert.equal(checked.outcome, number && current ? "official_match" : "not_verified");
+    assert.equal(checked.travelGuidance.category, category);
+    assert.equal(checked.providers.reputation, "unavailable");
+    assert.ok(!checked.evidence.some((e: { kind: string }) => e.kind === "reputation_report"));
+    const unknown = (await request(app).post("/api/checks").send({
+      phoneNumber: "+442079460018", claimedCompanyId: id,
+    }).expect(200)).body;
+    assert.equal(unknown.outcome, "not_verified");
+    assert.equal(unknown.reason, "NO_EVIDENCE");
+    assert.equal(unknown.travelGuidance.category, category);
+    if (number && current) assert.equal(unknown.alternatives[0].companyId, id);
+    else assert.equal(unknown.alternatives.length, 0);
+  }
+  const mismatch = (await request(app).post("/api/checks").send({
+    phoneNumber: "+18002211212", claimedCompanyId: "marriott",
+  }).expect(200)).body;
+  assert.equal(mismatch.reason, "COMPANY_MISMATCH");
+  assert.equal(mismatch.outcome, "not_verified");
+});
+test("travel scam guidance is educational, covers every category, and is not report evidence", async () => {
+  const app = appFor();
+  const guides = (await request(app).get("/api/travel-safety").expect(200)).body;
+  GetTravelSafetyResponse.parse(guides);
+  assert.equal(guides.length, 8);
+  assert.equal(new Set(guides.map((g: { category: string }) => g.category)).size, 8);
+  for (const guide of guides) {
+    assert.match(guide.sourceUrl, /^https:\/\/consumer\.ftc\.gov\//);
+    assert.match(guide.disclaimer, /not a report/);
+    assert.ok(guide.warningSigns.length > 0);
+    assert.ok(guide.nextSteps.length > 0);
+  }
+  const unknown = (await request(app).post("/api/checks").send({ phoneNumber: "+442079460018" }).expect(200)).body;
+  assert.equal(unknown.travelGuidance, undefined);
+  assert.equal(unknown.outcome, "not_verified");
 });
 test("invalid inputs, IDs, queries, body limits and unsupported types have safe standard errors", async () => {
   const app = appFor();

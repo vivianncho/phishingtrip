@@ -1,16 +1,20 @@
 import { Router, type IRouter } from "express";
 import {
   CheckNumberBody, CheckNumberResponse, ListCompaniesQueryParams, ListCompaniesResponse,
-  GetCompanyParams, GetCompanyResponse, GetCapabilitiesResponse,
+  GetCompanyParams, GetCompanyResponse, GetCapabilitiesResponse, GetTravelSafetyResponse,
 } from "@workspace/api-zod";
 import type { Directory } from "../verification/directory";
 import type { MetadataProvider } from "../verification/twilio";
 import { ApiFault, limitations, SOURCE_MAX_AGE_DAYS, CACHE_MAX_ENTRIES, CACHE_TTL_SECONDS } from "../verification/policy";
 import { normalize } from "../verification/normalize";
 import { decide } from "../verification/decision";
+import { guidanceFor, travelSafety } from "../verification/travel-safety";
 
 export function verificationRouter(directory: Directory, provider: MetadataProvider): IRouter {
   const router = Router();
+  router.get("/travel-safety", (_req, res) => {
+    res.json(GetTravelSafetyResponse.parse(travelSafety));
+  });
   router.get("/capabilities", async (_req, res): Promise<void> => {
     let directoryStatus: "active" | "unavailable" = "active";
     try { await directory.list("", undefined, 1, 0); } catch { directoryStatus = "unavailable"; }
@@ -51,6 +55,7 @@ export function verificationRouter(directory: Directory, provider: MetadataProvi
       ...result, normalizedNumber: normalized.number, countryCode: normalized.countryCode,
       claimedCompanyId: claimedCompanyId ?? null, checkedAt: new Date().toISOString(), limitations,
       providers: { directory: "active", reputation: "unavailable", metadata: lookup.status }, metadata: lookup.metadata,
+      ...(company ? { travelGuidance: guidanceFor(company.category) } : {}),
     }));
   });
   return router;

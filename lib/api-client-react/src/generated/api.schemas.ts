@@ -5,6 +5,29 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type TravelCategory = typeof TravelCategory[keyof typeof TravelCategory];
+
+
+export const TravelCategory = {
+  airline: 'airline',
+  hotel: 'hotel',
+  vacation_rental: 'vacation_rental',
+  car_rental: 'car_rental',
+  booking_service: 'booking_service',
+  rail_transfer: 'rail_transfer',
+  cruise: 'cruise',
+  tour: 'tour',
+} as const;
+
+export interface TravelSafetyGuidance {
+  category: TravelCategory;
+  title: string;
+  warningSigns: string[];
+  nextSteps: string[];
+  sourceUrl: string;
+  disclaimer: string;
+}
+
 export interface ApiProblem {
   code: string;
   message: string;
@@ -77,17 +100,10 @@ export interface OfficialContact {
   sources: Evidence[];
 }
 
-export type CompanyCategory = typeof CompanyCategory[keyof typeof CompanyCategory];
-
-
-export const CompanyCategory = {
-  airline: 'airline',
-} as const;
-
 export interface Company {
   id: string;
   name: string;
-  category: CompanyCategory;
+  category: TravelCategory;
   website: string;
   contacts: OfficialContact[];
 }
@@ -204,6 +220,8 @@ export interface CheckResult {
   limitations: string[];
   providers: ProviderState;
   metadata: NumberMetadata | null;
+  /** Educational guidance when the traveler selected a company. Never evidence against the submitted number. */
+  travelGuidance?: TravelSafetyGuidance;
 }
 
 export interface Capabilities {
@@ -255,7 +273,7 @@ export type ListCompaniesParams = {
  * @maxLength 80
  */
 search?: string;
-category?: ListCompaniesCategory;
+category?: TravelCategory;
 /**
  * @minimum 1
  * @maximum 50
@@ -267,11 +285,4 @@ limit?: number;
  */
 offset?: number;
 };
-
-export type ListCompaniesCategory = typeof ListCompaniesCategory[keyof typeof ListCompaniesCategory];
-
-
-export const ListCompaniesCategory = {
-  airline: 'airline',
-} as const;
 

@@ -5,14 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ListCompaniesCategory } from './listCompaniesCategory';
+import type { TravelCategory } from './travelCategory';
 
 export type ListCompaniesParams = {
 /**
  * @maxLength 80
  */
 search?: string;
-category?: ListCompaniesCategory;
+category?: TravelCategory;
 /**
  * @minimum 1
  * @maximum 50

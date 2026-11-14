@@ -13,6 +13,7 @@ import type { Freshness } from './freshness';
 import type { NumberMetadata } from './numberMetadata';
 import type { OfficialContact } from './officialContact';
 import type { ProviderState } from './providerState';
+import type { TravelSafetyGuidance } from './travelSafetyGuidance';
 
 export interface CheckResult {
   normalizedNumber: string;
@@ -31,4 +32,6 @@ export interface CheckResult {
   limitations: string[];
   providers: ProviderState;
   metadata: NumberMetadata | null;
+  /** Educational guidance when the traveler selected a company. Never evidence against the submitted number. */
+  travelGuidance?: TravelSafetyGuidance;
 }

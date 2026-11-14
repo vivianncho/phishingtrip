@@ -94,7 +94,15 @@ export const CheckNumberResponse = zod.object({
   "fetchedAt": zod.string().datetime({"offset":true}),
   "expiresAt": zod.string().datetime({"offset":true}),
   "cached": zod.boolean()
-}),zod.null()])
+}),zod.null()]),
+  "travelGuidance": zod.object({
+  "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
+  "title": zod.string(),
+  "warningSigns": zod.array(zod.string()),
+  "nextSteps": zod.array(zod.string()),
+  "sourceUrl": zod.string().url(),
+  "disclaimer": zod.string()
+}).optional().describe('Educational guidance when the traveler selected a company. Never evidence against the submitted number.')
 })
 
 
@@ -114,7 +122,7 @@ export const listCompaniesQueryOffsetMax = 10000;
 
 export const ListCompaniesQueryParams = zod.object({
   "search": zod.coerce.string().max(listCompaniesQuerySearchMax).optional(),
-  "category": zod.enum(['airline']).optional(),
+  "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']).optional(),
   "limit": zod.coerce.number().int().min(1).max(listCompaniesQueryLimitMax).default(listCompaniesQueryLimitDefault),
   "offset": zod.coerce.number().int().min(listCompaniesQueryOffsetMin).max(listCompaniesQueryOffsetMax).default(listCompaniesQueryOffsetDefault)
 })
@@ -126,7 +134,7 @@ export const ListCompaniesResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "category": zod.enum(['airline']),
+  "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
   "website": zod.string().url(),
   "contacts": zod.array(zod.object({
   "id": zod.string(),
@@ -172,7 +180,7 @@ export const getCompanyResponseContactsItemSourcesItemNumberRegExp = new RegExp(
 export const GetCompanyResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "category": zod.enum(['airline']),
+  "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
   "website": zod.string().url(),
   "contacts": zod.array(zod.object({
   "id": zod.string(),
@@ -195,6 +203,20 @@ export const GetCompanyResponse = zod.object({
 }))
 }))
 })
+
+
+/**
+ * @summary Calm guidance for common travel scam situations, not reports about numbers
+ */
+export const GetTravelSafetyResponseItem = zod.object({
+  "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']),
+  "title": zod.string(),
+  "warningSigns": zod.array(zod.string()),
+  "nextSteps": zod.array(zod.string()),
+  "sourceUrl": zod.string().url(),
+  "disclaimer": zod.string()
+})
+export const GetTravelSafetyResponse = zod.array(GetTravelSafetyResponseItem)
 
 
 /**

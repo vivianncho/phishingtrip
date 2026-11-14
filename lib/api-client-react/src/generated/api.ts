@@ -36,6 +36,7 @@ import type {
   NotFoundResponse,
   RateLimitedResponse,
   TooLargeResponse,
+  TravelSafetyGuidance,
   UnavailableResponse,
   UnsupportedMediaResponse
 } from './api.schemas';
@@ -455,6 +456,107 @@ export function useGetCompany<TData = Awaited<ReturnType<typeof getCompany>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCompanyQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetTravelSafetyUrl = () => {
+
+
+
+
+  return `/api/travel-safety`
+}
+
+/**
+ * @summary Calm guidance for common travel scam situations, not reports about numbers
+ */
+export const getTravelSafety = async ( options?: Parameters<typeof customFetch>[1]): Promise<TravelSafetyGuidance[]> => {
+
+  return customFetch<TravelSafetyGuidance[]>(getGetTravelSafetyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTravelSafetyQueryKey = () => {
+    return [
+    `/api/travel-safety`
+    ] as const;
+    }
+
+
+export const getGetTravelSafetyQueryOptions = <TData = Awaited<ReturnType<typeof getTravelSafety>>, TError = ErrorType<RateLimitedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTravelSafetyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTravelSafety>>> = ({ signal }) => getTravelSafety({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTravelSafetyQueryResult = NonNullable<Awaited<ReturnType<typeof getTravelSafety>>>
+export type GetTravelSafetyQueryError = ErrorType<RateLimitedResponse>
+
+
+export function useGetTravelSafety<TData = Awaited<ReturnType<typeof getTravelSafety>>, TError = ErrorType<RateLimitedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTravelSafety>>,
+          TError,
+          Awaited<ReturnType<typeof getTravelSafety>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTravelSafety<TData = Awaited<ReturnType<typeof getTravelSafety>>, TError = ErrorType<RateLimitedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTravelSafety>>,
+          TError,
+          Awaited<ReturnType<typeof getTravelSafety>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTravelSafety<TData = Awaited<ReturnType<typeof getTravelSafety>>, TError = ErrorType<RateLimitedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Calm guidance for common travel scam situations, not reports about numbers
+ */
+
+export function useGetTravelSafety<TData = Awaited<ReturnType<typeof getTravelSafety>>, TError = ErrorType<RateLimitedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTravelSafety>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTravelSafetyQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

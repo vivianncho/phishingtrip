@@ -54,7 +54,7 @@ paths:
       summary: Search the curated official directory
       parameters:
         - { in: query, name: search, schema: { type: string, maxLength: 80 } }
-        - { in: query, name: category, schema: { type: string, enum: [airline] } }
+        - { in: query, name: category, schema: { $ref: "#/components/schemas/TravelCategory" } }
         - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
         - { in: query, name: offset, schema: { type: integer, minimum: 0, maximum: 10000, default: 0 } }
       responses:
@@ -87,6 +87,19 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
         "503": { $ref: "#/components/responses/Unavailable" }
+  /travel-safety:
+    get:
+      operationId: getTravelSafety
+      summary: Calm guidance for common travel scam situations, not reports about numbers
+      responses:
+        "200":
+          description: Educational guidance for every supported travel category
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TravelSafetyGuidance" }
+        "429": { $ref: "#/components/responses/RateLimited" }
   /capabilities:
     get:
       operationId: getCapabilities
@@ -132,6 +145,19 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ApiProblem" }
   schemas:
+    TravelCategory:
+      type: string
+      enum: [airline, hotel, vacation_rental, car_rental, booking_service, rail_transfer, cruise, tour]
+    TravelSafetyGuidance:
+      type: object
+      required: [category, title, warningSigns, nextSteps, sourceUrl, disclaimer]
+      properties:
+        category: { $ref: "#/components/schemas/TravelCategory" }
+        title: { type: string }
+        warningSigns: { type: array, items: { type: string } }
+        nextSteps: { type: array, items: { type: string } }
+        sourceUrl: { type: string, format: uri }
+        disclaimer: { type: string }
     ApiProblem:
       type: object
       required: [code, message]
@@ -186,7 +212,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
-        category: { type: string, enum: [airline] }
+        category: { $ref: "#/components/schemas/TravelCategory" }
         website: { type: string, format: uri }
         contacts:
           type: array
@@ -241,6 +267,9 @@ components:
           anyOf:
             - { $ref: "#/components/schemas/NumberMetadata" }
             - { type: "null" }
+        travelGuidance:
+          description: Educational guidance when the traveler selected a company. Never evidence against the submitted number.
+          $ref: "#/components/schemas/TravelSafetyGuidance"
     Capabilities:
       type: object
       required: [providers, limitations, reputationReportsAvailable, sourceMaxAgeDays, metadataCacheTtlSeconds, metadataCacheMaxEntries, checkedAt]

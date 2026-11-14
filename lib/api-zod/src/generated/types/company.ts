@@ -5,13 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CompanyCategory } from './companyCategory';
 import type { OfficialContact } from './officialContact';
+import type { TravelCategory } from './travelCategory';
 
 export interface Company {
   id: string;
   name: string;
-  category: CompanyCategory;
+  category: TravelCategory;
   website: string;
   contacts: OfficialContact[];
 }

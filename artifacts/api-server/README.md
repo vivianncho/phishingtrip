@@ -3,6 +3,30 @@
 An anonymous, stateless phone-number checker. This is **not scam detection**.
 The design sandbox is separate and is not connected to these endpoints.
 The authoritative contract is [`../../lib/api-spec/openapi.yaml`](../../lib/api-spec/openapi.yaml).
+
+## Whole-trip travel coverage
+
+Directory categories are `airline`, `hotel`, `vacation_rental`, `car_rental`,
+`booking_service`, `rail_transfer`, `cruise`, and `tour`. Filter with
+`GET /api/companies?category=hotel`. A category is not a promise of comprehensive
+regional coverage or a scam-report feed.
+
+Additional official contact pages were inspected on **2026-11-14 at 20:46 UTC**:
+Marriott central reservations and Homes & Villas (official Marriott help site),
+Enterprise car reservations, Amtrak reservations/customer service, and Royal
+Caribbean individual reservations. Each seeded contact records its source URL,
+region, service and fixed review/expiry time. Marriott's central line is **not**
+an individual hotel's front desk. Booking.com and Viator have official website
+entries only, with empty contact lists; do not fabricate a phone number or match.
+Rerun `seed:directory` to add these entries without refreshing old review dates.
+
+`GET /api/travel-safety` returns short, category-specific educational warnings
+and next steps, referencing FTC travel-scam advice. `POST /api/checks` also
+includes optional `travelGuidance` when `claimedCompanyId` is supplied.
+These illustrative situations (urgent room payments, off-platform rental
+deposits, payment pressure, fake trip offers) **never become evidence about
+the checked number** and never change its verdict. No live scam-report provider
+has been added. Unknown or mismatched numbers remain `not_verified`, not fraud.
 API title `Api` and `GET /api/healthz → {"status":"ok"}` are unchanged.
 
 ## Development setup
@@ -102,7 +126,7 @@ No success response says “safe” or declares a number definitively fraudulent
 ### Directory
 
 `GET /api/companies` filters company names by case-insensitive literal substring
-`search` (maximum 80 characters), optionally `category=airline`. `%` and `_`
+`search` (maximum 80 characters), optionally a supported travel `category` (for example `category=hotel`). `%` and `_`
 are literal characters, not SQL wildcard searches. `limit` is an integer 1–50
 (default 20); `offset` is 0–10000 (default 0). Repeated, object-shaped, and unknown
 query parameters are rejected. Ordering is by unique company ID; pagination is
