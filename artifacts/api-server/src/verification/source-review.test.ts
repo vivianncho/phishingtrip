@@ -14,7 +14,7 @@ const now = Date.parse("2026-12-01T12:00:00Z");
 function fixture(): ReviewSubject {
   return {
     company: { id: "review-fixture", name: "Fixture", website: "https://fixture.example", category: "airline",
-      listingType: "organization", brandId: null, propertyCode: null, address: null, city: null, subdivision: null, countryCode: null },
+      listingType: "organization", brandId: null, propertyCode: null, address: null, city: null, subdivision: null, countryCode: null, propertyBrandType: null },
     contact: { id: "review-contact", companyId: "review-fixture", number: "+18002211212", region: "US", service: "Reservations", serviceType: "general" },
     source: { id: "review-source", contactId: "review-contact", sourceName: "Fixture official website",
       sourceUrl: "https://fixture.example/contact", assertion: "listed",

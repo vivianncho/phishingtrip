@@ -606,6 +606,30 @@ Database pool size and query/connect timeouts are bounded.
 This application cannot control hosting/proxy/provider log retention. Ensure
 those systems also disable request-body and sensitive URL logging before a
 public release. Do not add phone numbers or browsing data to analytics.
+## Hotel identity integrity
+
+Run `pnpm --filter @workspace/api-server run audit:directory` before pushing
+schema changes or importing directory rows. The read-only audit reports each
+invalid property ID and its missing fields; it also works on the older
+organization-only schema. Post-merge setup runs this audit before the schema
+push and stops if it fails. Resolve any reported identities using official
+property information rather than guessing locations, deleting contacts, or
+renewing review dates.
+
+PostgreSQL independently rejects property inserts and updates unless they have
+the hotel category, a non-whitespace official property code, address, city and
+country, and a parent hotel brand. A generated internal role column and a
+composite foreign key prevent missing parents, organizations used as brands,
+self-parenting, and deletion or reclassification of a brand that still has
+properties. Non-property organizations do not need location metadata.
+Seed reruns audit identities without changing existing phone evidence or
+source review dates. Neither this audit nor these constraints establish that
+a property's main telephone is a direct front-desk line.
+
+The development schema-push command uses Drizzle's schema diff in a transaction
+and orders the new supporting unique index before its self-referencing foreign
+key. It exits unsuccessfully on any SQL failure. It is development tooling,
+not application startup code or a production migration hook.
 
 ## Future reputation-provider evaluation
 

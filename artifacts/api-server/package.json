@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test src/verification/*.test.ts",
     "seed:directory": "tsx src/verification/seed.ts",
+    "audit:directory": "tsx src/verification/property-audit-command.ts",
     "review:directory": "tsx src/verification/review-command.ts",
     "history:directory": "tsx src/verification/history-command.ts"
   },

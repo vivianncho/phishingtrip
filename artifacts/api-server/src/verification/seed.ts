@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { pathToFileURL } from "node:url";
 import { officialProvenance } from "./source-policy";
 import type { TravelCategory, ContactService } from "@workspace/api-zod";
+import { assertPropertyIdentities } from "./property-audit";
 
 // Human-reviewed against the official sites at the recorded instant. Rerunning is NOT a new review.
 export const reviewedAt = new Date("2026-11-14T20:34:24Z");
@@ -90,6 +91,9 @@ const websiteOnlySeed = [
 
 export async function seedDirectory(database: Pick<typeof db, "transaction"> = db) {
   await database.transaction(async (tx) => {
+    // Fail explicitly on imported identity problems; never repair them by
+    // guessing a location, deleting evidence or renewing a source review.
+    await assertPropertyIdentities(tx);
     for (const entry of [...airlineSeed.map(entry => ({ ...entry, category: "airline" as const, reviewedAt })), ...travelSeed.map(entry => ({ ...entry, reviewedAt: travelReviewedAt })), ...propertySeed.map(entry => ({ ...entry, reviewedAt: propertyReviewedAt }))]) {
       if (parsePhoneNumberFromString(entry.number)?.number !== entry.number ||
           !parsePhoneNumberFromString(entry.number)?.isValid() ||
@@ -142,6 +146,7 @@ export async function seedDirectory(database: Pick<typeof db, "transaction"> = d
         throw new Error("Seed alias conflict");
       }
     }
+    await assertPropertyIdentities(tx);
   });
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -49,7 +49,8 @@ export const directory: Directory = {
       }
       c.freshness = contactFreshness(c.sources);
     }
-    return { ...company, contacts };
+    const { propertyBrandType: _internalBrandType, ...identity } = company;
+    return { ...identity, contacts };
   },
   async list(search, category, limit, offset, filters = {}) {
     const escape = (value: string) => value.replace(/[\\%_]/g, "\\$&");

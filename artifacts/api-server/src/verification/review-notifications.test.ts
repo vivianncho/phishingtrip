@@ -22,7 +22,7 @@ function fixture(): ReviewSubject {
   const id = `notification-${randomUUID()}`;
   return {
     company: { id, name: "Notification fixture", website: "https://fixture.example", category: "airline",
-      listingType: "organization", brandId: null, propertyCode: null, address: null, city: null, subdivision: null, countryCode: null },
+      listingType: "organization", brandId: null, propertyCode: null, address: null, city: null, subdivision: null, countryCode: null, propertyBrandType: null },
     contact: { id: `${id}-contact`, companyId: id, number: "+18002211212", region: "US", service: "Reservations", serviceType: "general" },
     source: { id: `${id}-source`, contactId: `${id}-contact`, sourceName: "Official fixture",
       sourceUrl: "https://fixture.example/contact", assertion: "listed",
