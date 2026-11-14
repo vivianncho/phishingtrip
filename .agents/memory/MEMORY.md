@@ -3,3 +3,4 @@
 - [Reputation licensing](number-reputation-licensing.md) — enterprise call-label monitoring is not automatically licensed consumer report evidence.
 - [Expo compatibility](expo-compatibility.md) — SDK-specific configuration needs online validation; legacy splash settings fail SDK 58's schema.
 - [Hotel contact scope](hotel-contact-scope.md) — a property's published “Tel” does not establish a direct front-desk line.
+- [Scheduled queue fairness](scheduled-queue-fairness.md) — capped retries need durable fair ordering or repeated failures can indefinitely block later sources.

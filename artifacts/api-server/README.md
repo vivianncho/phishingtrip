@@ -348,6 +348,87 @@ dates, effective expiry, reasons and `expectedFingerprint`. `--days` accepts
 changes review dates. Scheduling the **queue** command is safe; it does not
 perform reviews or send notifications.
 
+### Scheduled operator notifications
+
+The API can send an **opt-in HTTPS webhook** on startup and at a configured
+interval, using that same read-only queue. Nothing is sent until configured.
+It never visits source pages, calls `recordSourceReview`, updates `reviewedAt`,
+or creates human review records. Expired and disputed evidence stays expired
+and disputed until a human explicitly reviews it.
+
+Apply the new `source_review_notifications` schema using the development
+`db push` command above before enabling. There is no startup schema mutation.
+
+| Server setting | Default | Meaning |
+| --- | --- | --- |
+| `SOURCE_REVIEW_NOTIFICATIONS_ENABLED` | false | Literal `true` enables the API's scheduler |
+| `SOURCE_REVIEW_WEBHOOK_URL` | required | Operator-owned HTTPS receiver; no userinfo or fragment |
+| `SOURCE_REVIEW_RECIPIENTS` | required | Comma-separated routing IDs for that receiver, 1–20 |
+| `SOURCE_REVIEW_WEBHOOK_TOKEN` | unset | Optional bearer credential; store as a server secret |
+| `SOURCE_REVIEW_WARNING_DAYS` | 14 | Integer 0–90; queue's inclusive warning boundary |
+| `SOURCE_REVIEW_INTERVAL_MINUTES` | 1440 | Integer 1–10080; polling/retry interval |
+| `SOURCE_REVIEW_REPEAT_DAYS` | 7 | Integer 1–90; repeat unresolved alerts after this many days |
+
+The receiver must understand this JSON contract (not a Slack/email vendor
+payload) and route `recipients` to the desired operators. The destination
+and optional token are server-only; never put them in mobile or extension
+configuration. Recipient IDs and the full destination are not logged or
+stored in the delivery ledger.
+
+Each POST is `type=official_source_review_required`, with `deliveryId`,
+`generatedAt`, `recipients`, an `action` explaining the required manual review,
+and a `source` object containing `id`, `companyId`, `companyName`, `sourceName`,
+`sourceUrl`, `region`, `service`, `reviewedAt`, `effectiveExpiresAt`, and
+`reasons`. Only curated directory records are used; **no traveler-submitted
+number, check result, browsing data or review note is included**. Even curated
+phone numbers are omitted. Reasons include expiring, stale, disputed and
+invalid provenance/dates, matching the queue.
+
+```sh
+# One scheduled invocation; requires destination/recipients, independent of
+# the API scheduler's enable flag. It exits nonzero on delivery/run failure.
+pnpm --filter @workspace/api-server run review:directory notify
+# Trusted-shell delivery health: latest 100 events, sanitized failure codes.
+pnpm --filter @workspace/api-server run review:directory notification-status
+```
+
+Use either the API's built-in interval on an always-running server or run
+`notify` periodically with your external scheduler. An API instance cannot
+run scheduled work while stopped or asleep; use the one-shot command in an
+independently scheduled environment if this matters. No deployment or
+notification provider is automatically enabled by this change.
+
+PostgreSQL stores a deduplication key (hash of destination, sorted recipients,
+source fingerprint and reasons), delivery ID, pending/sent/failed state,
+attempt time, last success and sanitized error code. Overlapping processes
+claim events atomically with a 60-second lease; failed/crashed attempts can
+retry after the lease without marking success. Successful sends suppress
+repeats until the exact configured repeat boundary; source edits or a change
+from expiring to stale generate a new alert immediately. A source no longer
+in the queue is no longer sent. At most 100 delivery attempts run per tick;
+remaining sources are deferred to a later tick.
+Before applying that cap, events with no previous attempt take priority,
+followed by the least recently attempted events. This order is read from the
+durable ledger each run, so recurring successes and repeated failures cannot
+keep later sources behind the same first batch after a restart.
+
+The receiver must honor the `Idempotency-Key` header (`deliveryId`) to avoid
+duplicates if it accepted a delivery but the sender timed out or crashed
+before recording success. Retries reuse the same ID; each subsequent reminder
+gets a new ID. This is at-least-once delivery, not a guarantee of exactly one
+message. A 2xx means the receiver accepted the event, not that an operator
+read it. Non-2xx, network errors and timeouts are failures; redirects are
+forbidden and requests time out after five seconds. Response bodies and raw
+errors are never logged. Failed events remain eligible at the next poll.
+
+Monitor the API's structured `Source review` logs for configuration/queue
+failures and per-run sent/failed/suppressed/deferred counts.
+`notification-status` exits nonzero when its displayed rows include failures
+or pending leases older than 60 seconds. Historical failures are retained
+until a successful retry of that event; the status command is a latest-events
+view, not a complete delivery audit or an end-to-end monitoring service.
+There are no public notification administration routes.
+
 Create a JSON file with these fields (replace every illustrative value with
 the current queue values and the actual human review):
 

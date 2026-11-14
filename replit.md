@@ -11,6 +11,7 @@ Travel phone-number evidence checker with a separate fish-companion design proto
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run seed:directory` — idempotent sourced travel seed; does not refresh review dates
 - `pnpm --filter @workspace/api-server run review:directory queue` — read-only operator queue; use `review <file.json>` for explicit human reviews (see API README)
+- `pnpm --filter @workspace/api-server run review:directory notify` — opt-in configured webhook alerts; `notification-status` shows delivery health (see API README)
 - `pnpm --filter @workspace/api-server test` — decision, route, privacy and provider tests (requires seeded dev database)
 - `pnpm --filter @workspace/mockup-sandbox test` — local companion regression checks; no server, lookup, or calls
 - Required env: `DATABASE_URL` — Postgres connection string

@@ -22,3 +22,4 @@ export * from "./property-aliases";
 export * from "./official-contacts";
 export * from "./contact-sources";
 export * from "./contact-source-reviews";
+export * from "./source-review-notifications";
