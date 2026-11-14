@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { SafariCompanion, Sheet } from './SafariCompanion';
 import './_group.css';
 import './BrowserCompanion.css';
@@ -35,7 +35,6 @@ const COMPANIES: Company[] = [
   { id: 'tours', name: 'Roam Local Tours', category: 'Tours', number: '+1 (202) 555-0182', initials: 'rl', detail: 'Meeting points & tour changes', hours: 'Example hours: 6am–9pm' },
 ];
 function Fish({ state, tick, onActivate, label, compact = false }: { state: FishState; tick: number; onActivate?: () => void; label?: string; compact?: boolean }) {
-  const fishId = useId();
   const [boost, setBoost] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -50,28 +49,15 @@ function Fish({ state, tick, onActivate, label, compact = false }: { state: Fish
   return <div className={`sw-fish-stage sw-status-${state} ${compact ? 'sw-fish-compact' : ''}`}>
     <i className="sw-bubble" /><i className="sw-bubble b2" /><i className="sw-bubble b3" />
     <button data-testid={`button-pip-${label?.match(/0142|0187|0116/)?.[0] || 'manual'}`} className={`sw-fish-button ${boost ? 'sw-boost' : ''}`} onClick={onActivate || swim} aria-label={label || `Tap to make Hook the fish swim. ${captions[state]}`} data-swim={tick}>
-      <svg key={tick} className="sw-fish-art" viewBox="0 0 300 210" fill="none" role="img" aria-label={`Hook the fish, ${state}`}>
-        <defs>
-          <linearGradient id={`${fishId}-body`} x1="134" y1="46" x2="189" y2="161" gradientUnits="userSpaceOnUse"><stop stopColor="#a2ffeb" /><stop offset=".45" stopColor="#52dbc8" /><stop offset="1" stopColor="#158b99" /></linearGradient>
-          <linearGradient id={`${fishId}-tail`} x1="50" y1="90" x2="109" y2="127"><stop stopColor="#1c7488" /><stop offset="1" stopColor="#63ebd7" /></linearGradient>
-          <linearGradient id={`${fishId}-belly`} x1="120" y1="120" x2="190" y2="160"><stop stopColor="#d4fff0" stopOpacity=".7" /><stop offset="1" stopColor="#89f5da" stopOpacity=".1" /></linearGradient>
-          <radialGradient id={`${fishId}-lantern`}><stop stopColor="#c9fff5" /><stop offset=".3" stopColor="#3ef0d8" stopOpacity=".4" /><stop offset="1" stopColor="#3ef0d8" stopOpacity="0" /></radialGradient>
-        </defs>
-        <g className="sw-hook"><path d="M258 0v76c0 21-28 24-28 4v-9l8 9" stroke="#ff858b" strokeWidth="3" strokeLinecap="round" /><path d="M258 0v45" stroke="#6d879d" strokeWidth="1.5" /></g>
-        <g className="sw-tail"><path d="M106 101C86 93 66 71 55 76c-7 4 7 26 8 32 1 9-9 25-4 30 8 8 31-11 48-12" fill={`url(#${fishId}-tail)`} stroke="#72ead6" strokeOpacity=".45" /><path d="m63 87 34 23-35 17m10-22 24 7" stroke="#a1fce5" strokeOpacity=".4" strokeWidth="1.4" /></g>
-        <path d="M125 70c4-21 23-34 30-30 7 4 4 17 10 28" fill="#2cb5ab" stroke="#85eed6" strokeOpacity=".4" />
-        <path d="M105 90c13-30 46-42 76-30 31 12 54 41 49 62-5 23-39 43-74 39-39-4-68-31-51-71Z" fill={`url(#${fishId}-body)`} />
-        <path d="M109 118c22 13 59 22 111 12-13 24-42 33-64 30-26-2-43-15-47-42Z" fill={`url(#${fishId}-belly)`} />
-        <path d="M121 82c11-12 28-16 44-14" stroke="#e1fff1" strokeOpacity=".65" strokeWidth="3" strokeLinecap="round" />
-        <path d="M174 63c-2-26 18-37 31-22" stroke="#6ae4cf" strokeWidth="2" strokeLinecap="round" /><circle cx="208" cy="44" r="28" fill={`url(#${fishId}-lantern)`} /><circle cx="208" cy="44" r="6" fill="#baffec" /><circle cx="207" cy="42" r="2" fill="#e7fff5" />
-        <g className="sw-fin"><path d="M163 117c-4 7-7 26 2 31 9 5 20-12 22-24-10 0-17-3-24-7Z" fill="#239eaa" stroke="#7ae5d6" strokeOpacity=".6" /><path d="m168 123 1 17m5-14 1 8" stroke="#a2ffe5" strokeOpacity=".3" /></g>
-        <path className="sw-gill" d="M151 92c-6 7-7 13-4 19m-7-22c-5 5-7 10-6 15" stroke="#136f80" strokeWidth="2" strokeLinecap="round" />
-        <g className="sw-eye-open"><ellipse cx="196" cy="95" rx="10" ry="12" fill="#e1fff1" /><ellipse cx="199" cy="96" rx="6.5" ry="8.5" fill="#102d40" /><circle cx="201" cy="92" r="2.6" fill="#eafff4" /></g>
-        <path className="sw-eye-sleep" d="M188 98q9 8 18-2" stroke="#143e4b" strokeWidth="3" strokeLinecap="round" />
-        <ellipse cx="208" cy="113" rx="7" ry="3.5" fill="#89e3cf" opacity=".7" /><path d="M218 113q5 5 10 1" stroke="#135668" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="119" cy="109" r="2" fill="#b6fbe4" opacity=".7" /><circle cx="127" cy="119" r="1.7" fill="#b6fbe4" opacity=".5" /><circle cx="125" cy="99" r="1.3" fill="#b6fbe4" opacity=".7" />
-        <g className="sw-search-waves" stroke="#3ef0d8" strokeWidth="1.5" strokeLinecap="round"><path d="M240 88q9 12 0 24m9-31q16 19 0 38m9-45q23 26 0 52" /></g>
-        <g className="sw-sleep-letters" fill="#83bfce" fontFamily="Space Grotesk" fontWeight="500"><text x="239" y="74" fontSize="13">z</text><text x="254" y="58" fontSize="17">z</text></g>
+      <svg key={tick} className="sw-fish-art sw-figma-fish" viewBox="0 0 480 400" fill="none" role="img" aria-label={`Hook the fish, ${state}`}>
+        <g className="sw-hook"><path d="M62 6v65c0 24-29 26-29 7v-9l9 9" stroke="#ff858b" strokeWidth="3" strokeLinecap="round" /></g>
+        <g className="sw-tail"><image href="/__mockup/images/hook-figma-fins.svg" x="174" y="101" width="269.636" height="244.031" /></g>
+        <image href="/__mockup/images/hook-figma-body.svg" x="77.245" y="134.627" width="275.822" height="194.202" />
+        <image href="/__mockup/images/hook-figma-face.svg" x="87" y="160.5" width="91.403" height="111.492" />
+        <g className="sw-figma-eye-rest"><ellipse cx="143" cy="209" rx="32" ry="34" fill="#174854" /><path d="M122 209q21 17 42-2" stroke="#9dded0" strokeWidth="3.5" strokeLinecap="round" /></g>
+        <image className="sw-figma-lantern" href="/__mockup/images/hook-figma-lantern.svg" x="40.904" y="44.917" width="160.632" height="125.966" />
+        <g className="sw-search-waves" stroke="#d5f995" strokeWidth="2" strokeLinecap="round"><path d="M61 186q-14 24 0 48m-15-62q-23 37 0 76" /></g>
+        <g className="sw-sleep-letters" fill="#d5f995" fontFamily="Space Grotesk" fontWeight="500"><text x="193" y="111" fontSize="17">z</text><text x="218" y="87" fontSize="23">z</text></g>
       </svg>
     </button>
     <p className="sw-fish-caption" aria-live="polite"><Icon name={state === 'suspicious' ? 'alert' : state === 'unverified' ? 'help' : 'spark'} size={12} />{captions[state]}</p>
@@ -116,7 +102,7 @@ export function Stillwater() {
   function changeTab(next: typeof tab) { setTab(next); setDetail(null); setRemoveId(null); setInitialNumber(undefined); setEditingTrip(false); }
   function openDirectory(number?: string) { setTab('directory'); setQuery(''); setCategory('All'); setDetail(COMPANIES.find(c => c.number === number) || COMPANIES[0]); }
   const filtered = COMPANIES.filter(c => (category === 'All' || category === c.category) && `${c.name} ${c.number} ${c.category} ${c.detail} ${c.number.replace(/\D/g, '')}`.toLowerCase().includes(query.toLowerCase().trim()));
-  return <div className="stillwater sw-underwater" style={{ '--sw-dive': dive } as CSSProperties}>
+  return <div className="stillwater sw-underwater sw-figma-ocean" style={{ '--sw-dive': dive } as CSSProperties}>
     <div className="sw-ambient-ocean" aria-hidden="true"><div className="sw-ambient-depth" /><div className="sw-ambient-surface" /><div className="sw-ambient-ray" />{Array.from({ length: 10 }, (_, i) => <i key={i} style={{ '--bubble-x': `${(i * 23 + 7) % 100}%`, '--bubble-y': `${(i * 17 + 20) % 90}%`, '--bubble-delay': `${-i * 2}s` } as CSSProperties} />)}</div>
     <div className="sw-shell">
       <header className="sw-header">

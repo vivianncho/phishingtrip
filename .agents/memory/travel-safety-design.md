@@ -31,3 +31,9 @@ The user chose **Phishing Trip** as the product name, replacing the earlier work
 **Why:** The user explicitly said "Use the name Phishing Trip."
 
 **How to apply:** Use Phishing Trip in visible branding, app display names, extension manifests and guidance. Preserve existing storage keys, package names, routing slugs and URL schemes unless a separate migration is requested, so a branding change does not lose data or break installed links.
+
+Figma references supply the fish artwork, lighting and visual styling, not replacement product copy.
+
+**Why:** The user requested "Use the same fish design and light and designs, but keep the words of original made here."
+
+**How to apply:** Preserve Phishing Trip's original wording, Hook's name and existing interactions when applying reference visuals. Do not import the reference product's name, training content or navigation.

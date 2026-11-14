@@ -1,1 +1,71 @@
+.stillwater.sw-figma-ocean {
+  --ocean: #07313f;
+  --card: #174854;
+  --cyan: #d5f995;
+  --ink: #edf7ed;
+  --muted: #b1cfd0;
+  --line: #37626b;
+  background: #07313f;
+}
+.sw-figma-ocean .sw-ambient-ocean {
+  background: linear-gradient(180deg, #105e66 0%, #0b4a56 30%, #07313f 68%, #041e30 100%);
+  opacity: 1;
+}
+.sw-figma-ocean .sw-ambient-depth { background: #031928; opacity: calc(var(--sw-dive, 0) * .62); }
+.sw-figma-ocean .sw-ambient-surface {
+  top: -100px;
+  height: 150px;
+  background: #b4f3c51f;
+  box-shadow: 0 30px 110px #b7efb51c;
+}
+.sw-figma-ocean .sw-ambient-ray {
+  width: 165%;
+  left: -28%;
+  background: repeating-conic-gradient(from 151deg at 47% -14%, transparent 0deg 8deg, #b5f9cc09 8deg 15deg, transparent 15deg 28deg);
+  opacity: .9;
+  animation: sw-filtered-sun 22s ease-in-out infinite alternate;
+}
+.sw-figma-ocean .sw-ambient-ocean > i {
+  width: 3px; height: 3px; border: 0; background: #d5f9be;
+  box-shadow: 0 0 6px #dcffbd70; opacity: .35;
+}
+.sw-figma-ocean .sw-header { padding-bottom: 20px; border-bottom: 1px solid #bde6d522; }
+.sw-figma-ocean .sw-demo-badge { background: #ddf7cc0c; border-color: #d3edc12b; color: #d5e7d2; }
+.sw-figma-ocean .sw-view-switch { background: #082f3db3; border-color: #a8d5ce30; }
+.sw-figma-ocean .sw-view-switch button { color: #c1d7d1; }
+.sw-figma-ocean .sw-view-switch button[aria-pressed="true"] { background: #d5f995; color: #163f3b; box-shadow: 0 2px 12px #d5f99518; }
+.sw-figma-ocean .sw-scenario { border-color: #c0e1ce38; color: #d5e6db; background: #b3e3d009; }
+.sw-figma-ocean .sw-scenario.sw-scenario-selected { background: #d5f9951a; border-color: #d5f99599; }
+.sw-figma-ocean .sw-intro-note { border-color: #c4e7d32c; background: #abcdb30b; color: #bed4cc; }
+.sw-figma-ocean .sw-local-status, .sw-figma-ocean .sw-privacy { color: #b4cfd0; }
+.sw-figma-ocean .sw-browser {
+  background: #0d3844; border-color: #66968c66;
+  box-shadow: 0 20px 55px #021f3044, inset 0 1px #efffdf15;
+}
+.sw-figma-ocean .sw-manual-panel, .sw-figma-ocean .sw-detail-card,
+.sw-figma-ocean .sw-trip-hero, .sw-figma-ocean .sw-info-note {
+  background: #194b54b8; border-color: #85b8ad40;
+  box-shadow: inset 0 1px #dbffdb0a;
+}
+.sw-figma-ocean .sw-primary { background: #d5f995; color: #193e36; border-radius: 24px; }
+.sw-figma-ocean .sw-secondary { background: #d5eee10b; border-color: #9bc2b54d; }
+.sw-figma-ocean .sw-nav { background: #062c38f2; border-color: #b9dbc42b; backdrop-filter: blur(20px); }
+.sw-figma-ocean .sw-nav button { color: #adc7c5; }
+.sw-figma-ocean .sw-nav button.active { color: #d5f995; }
+.sw-figma-ocean .sw-nav button.active:before { background: #d5f995; }
+.sw-figma-ocean .bc-link-card { background: #1b4e58cc !important; border-color: #719e8f66 !important; }
+.sw-figma-ocean .sw-dive-teaser { color: #b4d0c4; }
+.sw-figma-ocean .sw-figma-fish .sw-tail { transform-origin: 350px 229px; }
+.sw-figma-eye-rest { opacity: 0; transition: opacity .35s ease; }
+.sw-status-official .sw-figma-eye-rest { opacity: 1; }
+.sw-figma-lantern { animation: sw-lantern-breathe 4s ease-in-out infinite; }
+.sw-status-searching .sw-figma-lantern { animation-duration: 1s; }
+.sw-status-suspicious .sw-figma-lantern { filter: drop-shadow(0 0 10px #ffc98d); }
+.sw-figma-ocean .sw-fish-stage { background: radial-gradient(ellipse, #dcffaf13, transparent 68%); }
+.sw-figma-ocean .sw-fish-stage:before, .sw-figma-ocean .sw-fish-stage:after { border-color: #dbf6b51a; }
+@keyframes sw-filtered-sun { from { opacity: .6; } to { opacity: 1; } }
+@keyframes sw-lantern-breathe { 0%, 100% { opacity: .82; } 50% { opacity: 1; filter: drop-shadow(0 0 7px #e4ffa780); } }
+@media (prefers-reduced-motion: reduce) {
+  .sw-figma-ocean .sw-ambient-ray, .sw-figma-ocean .sw-figma-lantern { animation: none; }
+}
 .stillwater.sw-underwater{position:relative;isolation:isolate;background:#0a1628}.sw-ambient-ocean{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden;background:linear-gradient(180deg,#1b5866 0,#103447 24%,#0a1628 75%);opacity:.45}.sw-ambient-depth{position:absolute;inset:0;background:#07101f;opacity:var(--sw-dive,0)}.sw-ambient-surface{position:absolute;top:-75px;left:-20%;width:140%;height:100px;border-radius:50%;background:#79d2c44d;box-shadow:0 15px 60px #77dfca24;transform:translateY(calc(var(--sw-dive,0)*-150px))}.sw-ambient-ray{position:absolute;top:0;left:0;width:100%;height:100%;background:repeating-conic-gradient(from 156deg at 55% 0%,transparent 0deg 10deg,#8df9d309 11deg 15deg,transparent 16deg 25deg);transform:translateY(calc(var(--sw-dive,0)*-80px))}.sw-ambient-ocean>i{position:absolute;left:var(--bubble-x);top:var(--bubble-y);width:5px;height:5px;border:1px solid #7ec6c54d;border-radius:50%;animation:sw-ocean-rise 18s linear infinite;animation-delay:var(--bubble-delay)}.sw-dive-teaser{color:#77aeb4;font-size:10px;line-height:1.6;display:flex;align-items:center;gap:7px;padding:15px 0 3px}.sw-underwater .sw-shell{position:relative}.sw-underwater .bc-link-card{background:#123b4dcc!important;border-color:#397482!important}.sw-underwater .sw-header{background:transparent}@keyframes sw-ocean-rise{0%{transform:translateY(200px);opacity:0}15%,80%{opacity:.7}100%{transform:translateY(-700px);opacity:0}}@media(prefers-reduced-motion:reduce){.sw-ambient-ocean *{animation:none!important;transform:none!important}}
