@@ -10,3 +10,4 @@
 - [Property country policy](property-country-policy.md) — imported locations must use canonical codes from the phone checker's supported territory set.
 - [Runtime access provisioning](runtime-access-provisioning.md) — schema success does not establish API permissions; provision explicitly and verify restricted access without owner fallback.
 - [Google Places intent](google-places-intent.md) — attributed travel-business discovery with a shared 10-request daily cap; connected status does not establish runtime proxy access.
+- [Native Hook coordinates](native-hook-coordinates.md) — use translated groups instead of nested SVG viewports for native artwork; trim exported wrapper whitespace.

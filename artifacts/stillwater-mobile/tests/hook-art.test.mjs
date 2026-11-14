@@ -5,6 +5,18 @@ import React from 'react';
 import { create } from 'react-test-renderer';
 import { act, mobile } from './support/mount.mjs';
 import { HOOK_BODY, HOOK_FACE, HOOK_FINS, HOOK_LANTERN, hookXml } from '../components/hookArt.ts';
+import { nativeHookXml } from '../components/nativeHookXml.ts';
+
+test('native layers preserve source positions without nested clipping viewports', () => {
+  const layers = [HOOK_FINS, HOOK_BODY, HOOK_FACE, HOOK_LANTERN];
+  const xml = nativeHookXml(layers);
+  assert.equal([...xml.matchAll(/<svg\b/g)].length, 1);
+  for (const position of ['174 101', '77.245 134.627', '87 160.5', '40.904 44.917']) {
+    assert.ok(xml.includes(`translate(${position}) scale(1 1)`));
+  }
+  assert.deepEqual([...xml.matchAll(/<path\b[^>]*>/g)].map(m => m[0]),
+    layers.flatMap(layer => [...layer.matchAll(/<path\b[^>]*>/g)].map(m => m[0])));
+});
 
 test('bundled native artwork preserves every approved path and has no external asset references', async () => {
   for (const [name, xml] of Object.entries({ body: HOOK_BODY, face: HOOK_FACE, fins: HOOK_FINS, lantern: HOOK_LANTERN })) {

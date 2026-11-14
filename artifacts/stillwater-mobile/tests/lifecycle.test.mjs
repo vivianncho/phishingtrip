@@ -152,17 +152,17 @@ test('country navigation invalidates A even while the check screen remains mount
   await act(async () => mobile.router.push('/country'));
   assert.ok(a.signal.aborted);
   await h.show(mobile.CountryScreen);
-  await h.press('country-GB');
+  await h.press('country-CA');
   await h.show(mobile.CheckScreen);
   assert.equal(h.posts.length, 1);
-  assert.equal(h.companion.draft.country, 'GB');
+  assert.equal(h.companion.draft.country, 'CA');
   await h.press('check-number');
   const b = h.posts[1];
-  assert.equal(JSON.parse(b.body).defaultCountry, 'GB');
+  assert.equal(JSON.parse(b.body).defaultCountry, 'CA');
   await h.resolve(a, result());
   assert.doesNotMatch(h.text(), /Old A evidence/);
-  await h.resolve(b, result(A, { label: 'GB selection evidence' }));
-  assert.match(h.text(), /GB selection evidence/);
+  await h.resolve(b, result(A, { label: 'CA selection evidence' }));
+  assert.match(h.text(), /CA selection evidence/);
 });
 
 test('navigation blur and unmount discard pending results and accessibility announcements', async t => {

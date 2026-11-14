@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, SvgXml, Text as SvgText } from 'react-native-svg';
-import { HOOK_BODY, HOOK_FACE, HOOK_FINS, HOOK_LANTERN, hookXml } from './hookArt';
+import { HOOK_BODY, HOOK_FACE, HOOK_FINS, HOOK_LANTERN } from './hookArt';
+import { nativeHookXml as hookXml } from './nativeHookXml';
 import palette from '@/constants/colors';
 import type { CheckResult } from '@workspace/api-client-react';
 import { fishCaption } from '@/lib/checks';
@@ -35,7 +36,8 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
   const rest = result?.outcome === 'official_match';
   const reports = result?.outcome === 'reports_found';
   return <View style={styles.stage} accessible accessibilityLabel={`Hook the fish. ${fishCaption(result, pending)}`}>
-    <View style={styles.ripple} /><View style={[styles.ripple, { width: 300, height: 120 }]} />
+    <View style={styles.water}>
+    <View style={styles.ripple} /><View style={[styles.ripple, { width: '94%', height: 120 }]} />
     <Animated.View style={{ transform: [{ translateY: motion.interpolate({ inputRange: [0, 1], outputRange: [3, -7] }) }, { translateX: motion.interpolate({ inputRange: [0, 1], outputRange: [reports ? -22 : pending ? -12 : 0, reports ? -15 : pending ? 12 : 4] }) }] }}>
       <View style={{ width: W, height: H }}>
         <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate: motion.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', pending ? '5deg' : '3deg'] }) }] }]}>
@@ -56,10 +58,12 @@ export function Hook({ result, pending }: { result: CheckResult | null; pending:
         </Svg>
       </View>
     </Animated.View>
+    </View>
     <Text style={[s.small, { textAlign: 'center', fontSize: 11 }]}>{fishCaption(result, pending)}</Text>
   </View>;
 }
 const styles = StyleSheet.create({
-  stage: { alignItems: 'center', justifyContent: 'center', minHeight: 192, marginVertical: -6 },
-  ripple: { position: 'absolute', width: 245, height: 90, borderRadius: 180, borderWidth: 1, borderColor: c.fishGlow, transform: [{ rotate: '-13deg' }] },
+  stage: { alignItems: 'center', justifyContent: 'center', marginVertical: -6, gap: 8 },
+  water: { width: '100%', maxWidth: 320, height: H, alignItems: 'center', justifyContent: 'center' },
+  ripple: { position: 'absolute', width: '78%', height: 90, borderRadius: 180, borderWidth: 1, borderColor: c.fishGlow, transform: [{ rotate: '-13deg' }] },
 });
