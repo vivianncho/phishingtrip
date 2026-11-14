@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { SafariCompanion, Sheet } from './SafariCompanion';
 import './_group.css';
+import './BrowserCompanion.css';
 
 type IconName = 'check' | 'shield' | 'search' | 'arrow' | 'book' | 'trip' | 'alert' | 'help' | 'close' | 'lock' | 'plus' | 'trash' | 'back' | 'plane' | 'edit' | 'spark';
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
@@ -107,7 +108,7 @@ export function Stillwater() {
         <span className="sw-demo-badge">LOCAL DEMO</span>
       </header>
 
-      {tab === 'check' && <SafariCompanion initialNumber={initialNumber} exampleContacts={COMPANIES} onOfficialContact={openDirectory} renderFish={(state, tick, onActivate, label) => <Fish state={state} tick={tick} onActivate={onActivate} label={label} compact />} />}
+      {tab === 'check' && <><SafariCompanion initialNumber={initialNumber} exampleContacts={COMPANIES} onOfficialContact={openDirectory} renderFish={(state, tick, onActivate, label) => <Fish state={state} tick={tick} onActivate={onActivate} label={label} compact />} /><button className="bc-link-card" onClick={() => window.open('/__mockup/preview/stillwater/BrowserCompanion', '_blank', 'noopener,noreferrer')}><Icon name="shield" size={23} /><span><strong>Check right where you search.</strong><small>Explore the desktop extension concept.<br />A second look at numbers in AI answers.</small></span><Icon name="arrow" size={17} /></button></>}
 
       {tab === 'directory' && <main className="sw-screen-enter">
         {detail ? <>
