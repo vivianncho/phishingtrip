@@ -16,6 +16,11 @@ The user explicitly broadened the scope beyond flights: hotels and all kinds of 
 **Why:** They asked whether hotel and other travel numbers could be checked for spam and said, "Make it target people anxious about travel."
 
 **How to apply:** Include accommodation, ground transport, booking services, and activities as well as flights. Favor calm, actionable result wording over alarmist warnings, and never equate an unknown number with proven fraud.
+The current design direction is a Safari-only, tap-to-check companion beside phone numbers while browsing, with manual entry secondary. It is not a cross-app overlay, functioning extension, or live verification service.
+
+**Why:** The user explicitly scoped this stage to a local Safari browsing demonstration with fictional evidence, no calls, and no transmission of searches, page content, or numbers.
+
+**How to apply:** Keep simulated permissions and evidence visibly labeled as previews. Treat missing data as uncertainty, disclose source conflicts, and never equate a directory match with a guarantee of safety.
 
 **Why:** The user described someone panicking at an airport gate and asked for a fish-themed experience where the fish swims or reacts when a scam is detected.
 
