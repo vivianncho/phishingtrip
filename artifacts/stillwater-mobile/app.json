@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Stillwater",
+    "slug": "stillwater-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "stillwater-mobile",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {},
+    "web": {
+      "favicon": "./assets/images/icon.png",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-splash-screen", {
+        "image": "./assets/images/icon.png",
+        "imageWidth": 180,
+        "backgroundColor": "#0a1628"
+      }]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

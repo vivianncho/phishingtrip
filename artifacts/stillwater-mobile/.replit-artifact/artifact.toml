@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Stillwater"
+description = "An iPhone-first travel phone-number checker with Hook, sourced official contacts, transparent evidence and explicit private tap-to-check lookups."
+version = "1.0.0"
+id = "artifacts/stillwater-mobile"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 23862
+
+[services.development]
+run = "pnpm --filter @workspace/stillwater-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/stillwater-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/stillwater-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "23862"
+BASE_PATH = "/"
