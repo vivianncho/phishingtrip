@@ -79,8 +79,61 @@ Alias spellings were read from official localized property pages on
 `city`), locale, source URL and fixed human review instant. Apply the additive
 schema with `pnpm --filter @workspace/db run push`, then rerun `seed:directory`.
 Seed reruns do not renew spelling or phone review dates and reject conflicting
-alias identities. New aliases require a human to read an official page for the
+alias identities. Retired seed aliases stay retired. New aliases require a human to read an official page for the
 exact property, not infer a translation or use brand similarity.
+
+#### Operator spelling maintenance
+
+This workflow is separate from telephone-source reviews and expiry reminders:
+
+```sh
+pnpm --filter @workspace/api-server run review:directory alias-list marriott-nycmq
+pnpm --filter @workspace/api-server run review:directory alias-review /absolute/path/alias-review.json
+```
+
+`alias-list` without a property ID lists all spellings, including retired ones.
+Read the localized official page for the **exact property**, then copy the
+alias ID and current `expectedFingerprint` into a JSON file:
+
+```json
+{
+  "action": "replace",
+  "aliasId": "nycmq-city-es",
+  "expectedFingerprint": "<copy from alias-list>",
+  "reviewer": "Directory operator",
+  "note": "Describe the spelling change confirmed on the official property page.",
+  "confirmedHumanReview": true,
+  "sourceUrl": "https://www.marriott.com/es/hotels/nycmq-new-york-marriott-marquis/overview/",
+  "reviewedAt": "<actual ISO timestamp of your human review>",
+  "value": "<exact replacement spelling read on that page>"
+}
+```
+
+Use `action: "review"` to confirm an unchanged spelling, or `action: "retire"`
+to remove it from discovery without a replacement. Omit `value` for these two
+actions. Review timestamps must be newer than the spelling's last review and
+not in the future. Never copy an example timestamp as evidence of a review.
+All actions require an official HTTPS URL for this property, not the brand
+homepage or a different hotel. Currently the supported source path is
+`/hotels/<exact-property-code>-...` on the property's stored official origin.
+The operator must actually inspect the page; URL validation does not fetch or
+confirm its content.
+
+Replacement atomically retires the old spelling and creates a new spelling
+with the same property ID, kind and locale. The old URL, locale and spelling
+remain available; the new row stores the newly reviewed source URL. Review can
+update the active spelling's source URL, with its previous URL kept in history.
+Retirement is one-way: retired rows cannot be reviewed or reactivated. Seed
+reruns never restore them. Retired aliases stop contributing to both search and
+city filters; another active alias or canonical field can still independently
+match the same text.
+
+Every action writes a separate `property_alias_reviews` record with the reviewer,
+note, action source URL/time, before/after spelling and replacement ID. A stale
+fingerprint fails without changes: reload `alias-list` and review again. No
+company identity, canonical name/city, contact, contact-source dates, or
+telephone review history is updated. This is an operator-only CLI using existing
+database access; there is no public maintenance endpoint.
 
 `search` uses case-insensitive **literal substrings**, including aliases;
 `city` matches only an exact canonical city or curated city alias, not a hotel

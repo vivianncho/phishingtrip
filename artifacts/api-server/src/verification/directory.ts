@@ -1,5 +1,5 @@
 import { db, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
-import { asc, eq, ilike, and, or, sql, exists } from "drizzle-orm";
+import { asc, eq, ilike, and, or, sql, exists, isNull } from "drizzle-orm";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
 import { evidenceFreshness, officialProvenance } from "./source-policy";
 export { evidenceFreshness } from "./source-policy";
@@ -23,9 +23,10 @@ export function contactFreshness(sources: Evidence[]): Evidence["freshness"] {
   return sources.some((s) => s.freshness === "stale") ? "stale" : "unknown";
 }
 
-async function hydrate(rows: (typeof officialContacts.$inferSelect)[]): Promise<OfficialContact[]> {
+type Database = Pick<typeof db, "select">;
+async function hydrate(rows: (typeof officialContacts.$inferSelect)[], database: Database): Promise<OfficialContact[]> {
   return Promise.all(rows.map(async (c) => {
-    const raw = await db.select().from(contactSources).where(eq(contactSources.contactId, c.id)).orderBy(asc(contactSources.id));
+    const raw = await database.select().from(contactSources).where(eq(contactSources.contactId, c.id)).orderBy(asc(contactSources.id));
     const sources: Evidence[] = raw.map((s) => {
       const e = { id: s.id, kind: "official_contact" as const, companyId: c.companyId,
         sourceUrl: s.sourceUrl, sourceName: s.sourceName, reviewedAt: s.reviewedAt.toISOString(),
@@ -37,11 +38,12 @@ async function hydrate(rows: (typeof officialContacts.$inferSelect)[]): Promise<
   }));
 }
 
-export const directory: Directory = {
+export function createDirectory(database: Database = db): Directory {
+return {
   async get(id) {
-    const [company] = await db.select().from(companies).where(eq(companies.id, id));
+    const [company] = await database.select().from(companies).where(eq(companies.id, id));
     if (!company) return null;
-    const contacts = await hydrate(await db.select().from(officialContacts).where(eq(officialContacts.companyId, id)).orderBy(asc(officialContacts.id)));
+    const contacts = await hydrate(await database.select().from(officialContacts).where(eq(officialContacts.companyId, id)).orderBy(asc(officialContacts.id)), database);
     // Invalid provenance is visible but cannot support official matching.
     for (const c of contacts) {
       for (const e of c.sources) {
@@ -59,8 +61,9 @@ export const directory: Directory = {
     // match. City filters use only city aliases, never a hotel-name alias.
     const aliasMatch = (value: string, kind?: "city") => and(
       eq(companies.listingType, "property"),
-      exists(db.select({ id: propertyAliases.id }).from(propertyAliases).where(and(
+      exists(database.select({ id: propertyAliases.id }).from(propertyAliases).where(and(
         eq(propertyAliases.companyId, companies.id),
+        isNull(propertyAliases.retiredAt),
         kind ? eq(propertyAliases.kind, kind) : undefined,
         ilike(propertyAliases.value, value),
       ))),
@@ -71,15 +74,17 @@ export const directory: Directory = {
       filters.brandId ? eq(companies.brandId, filters.brandId) : undefined,
       filters.city ? or(ilike(companies.city, escape(filters.city)), aliasMatch(escape(filters.city), "city")) : undefined,
       filters.countryCode ? eq(companies.countryCode, filters.countryCode) : undefined);
-    const rows = await db.select({ id: companies.id }).from(companies).where(where).orderBy(asc(companies.id)).limit(limit).offset(offset);
-    const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(companies).where(where);
+    const rows = await database.select({ id: companies.id }).from(companies).where(where).orderBy(asc(companies.id)).limit(limit).offset(offset);
+    const [count] = await database.select({ total: sql<number>`count(*)::int` }).from(companies).where(where);
     const items = (await Promise.all(rows.map((r) => this.get(r.id)))).filter((c): c is Company => c !== null);
     return { items, total: count?.total ?? 0 };
   },
   async matching(number) {
-    const rows = await db.select().from(officialContacts).where(eq(officialContacts.number, number));
+    const rows = await database.select().from(officialContacts).where(eq(officialContacts.number, number));
     const ids = [...new Set(rows.map((r) => r.companyId))];
     const all = await Promise.all(ids.map((id) => this.get(id)));
     return all.flatMap((c) => c?.contacts.filter((contact) => contact.number === number) ?? []);
   },
 };
+}
+export const directory = createDirectory();

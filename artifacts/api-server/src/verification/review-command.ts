@@ -7,8 +7,9 @@ import { ApiFault } from "./policy";
 import { runReviewNotifications } from "./review-scheduler";
 import { notificationStatus } from "./review-notification-store";
 import { NotificationConfigError } from "./review-notifications";
+import { AliasReviewError, listPropertyAliases, recordAliasReview } from "./alias-review";
 
-const usage = "Usage: review:directory queue [--days 0..90] | review <review.json> | notify | notification-status";
+const usage = "Usage: review:directory queue [--days 0..90] | review <review.json> | alias-list [property-id] | alias-review <review.json> | notify | notification-status";
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   let result: unknown;
@@ -16,6 +17,10 @@ async function main() {
     result = await listSourceReviews(args.length ? Number(args[1]) : SOURCE_REVIEW_WARNING_DAYS);
   } else if (command === "review" && args.length === 1) {
     result = await recordSourceReview(JSON.parse(await readFile(args[0]!, "utf8")));
+  } else if (command === "alias-list" && args.length <= 1) {
+    result = await listPropertyAliases(args[0]);
+  } else if (command === "alias-review" && args.length === 1) {
+    result = await recordAliasReview(JSON.parse(await readFile(args[0]!, "utf8")));
   } else if (command === "notify" && args.length === 0) {
     const delivery = await runReviewNotifications();
     result = delivery;
@@ -32,7 +37,7 @@ async function main() {
 }
 main().catch((error: unknown) => {
   // Validation is actionable; never dump database errors or connection details.
-  const message = error instanceof SourceReviewError || error instanceof ApiFault || error instanceof NotificationConfigError ? error.message :
+  const message = error instanceof AliasReviewError || error instanceof SourceReviewError || error instanceof ApiFault || error instanceof NotificationConfigError ? error.message :
     error instanceof ZodError ? error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n") :
     error instanceof SyntaxError ? "Review file must contain valid JSON." :
     "Review command failed; check configuration and database setup.";

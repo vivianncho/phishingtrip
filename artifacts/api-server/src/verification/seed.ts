@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 import { officialProvenance } from "./source-policy";
 import type { TravelCategory, ContactService } from "@workspace/api-zod";
 import { assertPropertyIdentities } from "./property-audit";
+import { exactPropertyAliasProvenance } from "./alias-review";
 
 // Human-reviewed against the official sites at the recorded instant. Rerunning is NOT a new review.
 export const reviewedAt = new Date("2026-11-14T20:34:24Z");
@@ -135,14 +136,15 @@ export async function seedDirectory(database: Pick<typeof db, "transaction"> = d
     for (const entry of propertyAliasSeed) {
       const [property] = await tx.select().from(companies).where(eq(companies.id, entry.companyId));
       // Require provenance for this exact property, not just any brand page.
-      if (!property || property.listingType !== "property" || !property.propertyCode ||
-          !officialProvenance(entry.sourceUrl, property.website) ||
-          !new URL(entry.sourceUrl).pathname.includes(`/hotels/${property.propertyCode.toLowerCase()}-`)) {
+      if (!property || !exactPropertyAliasProvenance(entry.sourceUrl, property)) {
         throw new Error("Seed alias provenance conflict");
       }
       await tx.insert(propertyAliases).values({ ...entry, reviewedAt: aliasReviewedAt }).onConflictDoNothing();
       const [existing] = await tx.select().from(propertyAliases).where(eq(propertyAliases.id, entry.id));
-      if (!existing || Object.entries(entry).some(([key, value]) => existing[key as keyof typeof existing] !== value)) {
+      // Operator reviews own mutable provenance and retirement. Never resurrect
+      // retired seed spellings or overwrite a newer spelling review.
+      if (!existing || existing.companyId !== entry.companyId ||
+          existing.kind !== entry.kind || existing.locale !== entry.locale) {
         throw new Error("Seed alias conflict");
       }
     }
