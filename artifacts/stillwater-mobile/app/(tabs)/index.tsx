@@ -109,9 +109,13 @@ export default function CheckScreen() {
       <Copy style={s.small}>Only this number, your selected country and optional company are sent when you tap. If enabled, Twilio Basic also receives the number for formatting metadata.</Copy>
     </View>}
     {result && <View style={{ gap: 14 }} accessibilityLiveRegion="polite">
-      <View style={[s.card, { borderColor: result.outcome === 'official_match' ? colors.primary : result.outcome === 'reports_found' ? colors.destructive : colors.input }]}>
+      <View style={[s.card, { borderColor: result.outcome === 'official_match' ? colors.primary : colors.destructive }]}>
         <Copy style={s.eyebrow}>EVIDENCE RESULT · NOT A SAFETY VERDICT</Copy>
-        <View style={s.row}><Ionicons name={result.outcome === 'official_match' ? 'shield-checkmark-outline' : result.outcome === 'reports_found' ? 'warning-outline' : 'help-circle-outline'} size={26} color={result.outcome === 'reports_found' ? colors.destructive : colors.primary} /><Copy style={s.h2}>{result.label}</Copy></View>
+        <View style={s.row}><Ionicons name={result.outcome === 'official_match' ? 'shield-checkmark-outline' : 'warning-outline'} size={26} color={result.outcome === 'official_match' ? colors.primary : colors.destructive} /><Copy testID="result-label" accessibilityRole="header" style={[s.h2, { flexShrink: 1 }, result.outcome === 'not_verified' && { color: colors.destructive, fontFamily: 'DMSans_700Bold', fontWeight: '700' }]}>{result.label}</Copy></View>
+        {result.outcome === 'not_verified' && <View style={{ gap: 6 }}>
+          <Copy testID="unverified-warning" style={{ color: colors.destructive, fontFamily: 'DMSans_700Bold', fontWeight: '700', fontSize: 18, lineHeight: 25 }}>Pause before calling.</Copy>
+          <Copy>This number is not verified. Check your booking confirmation or the company’s official website. This does not mean it is a scam.</Copy>
+        </View>}
         <Copy style={s.h2} selectable>{result.normalizedNumber}</Copy>
         <Copy style={s.small}>{result.countryCode ?? 'Country unavailable'} · {result.claimedCompanyId ? `Claimed company: ${result.claimedCompanyId}` : 'No company claim'}</Copy>
         <Copy>{result.explanation}</Copy>
@@ -131,7 +135,7 @@ export default function CheckScreen() {
           <ScrollView contentContainerStyle={s.content}>
             <Button title="Close evidence" testID="close-evidence" icon="close" secondary onPress={() => setEvidenceOpen(false)} />
             <Copy accessibilityRole="header" style={s.h2}>The evidence, clearly.</Copy>
-            <Copy selectable>{result.normalizedNumber}</Copy><Copy>{result.label}</Copy>
+            <Copy selectable>{result.normalizedNumber}</Copy><Copy style={result.outcome === 'not_verified' && { color: colors.destructive, fontFamily: 'DMSans_700Bold', fontWeight: '700' }}>{result.label}</Copy>
             <Copy style={s.small}>{result.claimedCompanyId ? `Claimed company: ${result.claimedCompanyId}` : 'No company claim selected'}</Copy>
             {!result.evidence.length && <Copy>No attributable evidence was found. This is not a safety or fraud verdict.</Copy>}
             {result.evidence.map(source => <Source key={source.id} source={source} />)}

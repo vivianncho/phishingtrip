@@ -211,6 +211,12 @@ for (const reason of ['COMPANY_MISMATCH', 'NO_EVIDENCE', 'SOURCE_CONFLICT', 'STA
     assert.match(h.text(), /Hook the fish. Not sure yet/);
     assert.equal(h.find('hook-lantern-glow').props.fill, '#e53e46');
     assert.match(h.text(), /not proof of a scam/);
+    const labelStyle = Object.assign({}, ...h.find('result-label').props.style.filter(Boolean));
+    assert.equal(labelStyle.fontWeight, '700');
+    assert.equal(labelStyle.fontFamily, 'DMSans_700Bold');
+    assert.ok(h.find('unverified-warning'));
+    assert.match(h.text(), /Pause before calling/);
+    assert.match(h.text(), /This does not mean it is a scam/);
     assert.doesNotMatch(h.text(), /A listed contact, not a guarantee/);
     const artwork = h.tree.root.findAllByType('SvgXml').map(node => node.props.xml).join('');
     assert.match(artwork, /id="face"/, 'approved open-eye artwork is present');

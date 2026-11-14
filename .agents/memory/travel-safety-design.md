@@ -70,3 +70,5 @@ lantern for that state; it does not change the evidence classification.
 **How to apply:** Explain red as “pause—not proof of a scam.” Keep pending,
 empty and reset states neutral, official matches green, and never relabel
 missing evidence as scam reports.
+The user also requested bold red words for unverified results so the caution
+is apparent without relying on the lantern alone; preserve that emphasis.
