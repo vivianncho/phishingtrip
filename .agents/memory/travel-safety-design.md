@@ -32,6 +32,12 @@ The user chose **Phishing Trip** as the product name, replacing the earlier work
 
 **How to apply:** Use Phishing Trip in visible branding, app display names, extension manifests and guidance. Preserve existing storage keys, package names, routing slugs and URL schemes unless a separate migration is requested, so a branding change does not lose data or break installed links.
 
+Hook should turn red for scam-related results and green for positive results.
+
+**Why:** The user explicitly requested the lantern fish turn red for a scam number and green when it is not.
+
+**How to apply:** Use report evidence for red and an official contact match for green; leave unknown and pending checks neutral. Preserve the distinction between a listed contact and a safety guarantee.
+
 Figma references supply the fish artwork, lighting and visual styling, not replacement product copy.
 
 **Why:** The user requested "Use the same fish design and light and designs, but keep the words of original made here."

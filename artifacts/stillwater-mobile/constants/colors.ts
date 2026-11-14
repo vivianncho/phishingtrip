@@ -12,6 +12,7 @@ const ocean = {
   border: '#37626b', input: '#4b7a7a',
   warning: '#ffc98d', overlay: '#00000099',
   fishLight: '#9dded0', fishBody: '#227079', fishDark: '#123f49', fishGlow: '#dbf6b533',
+  fishReported: '#e53e46', fishMatched: '#38c85b',
 };
 // Scroll-linked descent layers: filtered surface light -> deep teal -> abyss.
 export const depth = {

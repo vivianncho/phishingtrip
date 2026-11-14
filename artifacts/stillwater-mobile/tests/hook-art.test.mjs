@@ -94,3 +94,46 @@ test('Hook responds to live Reduce Motion changes and cleans up its animation', 
     Object.assign(mobile.Animated, originalAnimated);
   }
 });
+
+test('Hook turns red for reports, green for official matches, and neutral while uncertain or checking', async t => {
+  let tree;
+  await act(async () => { tree = create(React.createElement(mobile.Hook, { result: null, pending: false })); });
+  t.after(async () => { await act(async () => tree.unmount()); });
+  const layers = () => tree.root.findAllByType('SvgXml').map(node => node.props.xml);
+  const neutral = layers();
+  const geometry = xml => [...xml.matchAll(/\bd="([^"]*)"/g)].map(match => match[1]);
+  for (const [outcome, pending, dominantChannel] of [
+    ['reports_found', false, 0],
+    ['official_match', false, 1],
+    ['not_verified', false, null],
+    ['reports_found', true, null],
+    ['official_match', true, null],
+    [null, false, null],
+  ]) {
+    await act(async () => tree.update(React.createElement(mobile.Hook, { result: outcome ? { outcome } : null, pending })));
+    const rendered = layers();
+    assert.deepEqual(rendered.map(geometry), neutral.map(geometry), 'recoloring cannot change approved geometry');
+    if (dominantChannel === null) {
+      assert.deepEqual(rendered, neutral, 'unknown, reset and pending states must not imply a verdict');
+    } else {
+      assert.notDeepEqual(rendered, neutral);
+      // Face details remain legible; every fin, body and lantern paint changes.
+      const paintedLayers = [rendered[0], rendered[1].replace(/<g id="face">[\s\S]*?<\/g>/, ''), rendered[2]];
+      for (const xml of paintedLayers) {
+        const paints = [...xml.matchAll(/\b(?:fill|stroke)="#([0-9a-f]{6})"/gi)];
+        assert.ok(paints.length);
+        for (const [, hex] of paints) {
+          const rgb = [0, 2, 4].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+          assert.ok(rgb[dominantChannel] > rgb[(dominantChannel + 1) % 3]);
+          assert.ok(rgb[dominantChannel] > rgb[(dominantChannel + 2) % 3]);
+        }
+      }
+      const glows = tree.root.findAllByType('Circle');
+      assert.equal(glows.length, 2);
+      assert.equal(glows[0].props.fill, dominantChannel === 0 ? '#e53e46' : '#38c85b');
+    }
+    if (pending) {
+      assert.ok(!tree.root.findAllByType('Path').some(node => ['M122 209q21 17 42-2', 'M62 6v65c0 24-29 26-29 7v-9l9 9'].includes(node.props.d)));
+    }
+  }
+});

@@ -67,6 +67,27 @@ depend on the canvas server, or require an SVG transformer. The lantern's
 browser filter is replaced with translucent native SVG glow circles.
 Existing captions, explicit checks and evidence meanings are unchanged.
 
+After approving canvas artwork or its placement, regenerate and commit the mobile bundle:
+
+```bash
+pnpm --filter @workspace/stillwater-mobile run generate:hook-art
+pnpm --filter @workspace/stillwater-mobile run check:hook-art
+```
+
+The generator reads the four `hook-figma-*.svg` files and the literal image
+placements and enclosing viewBox in the canvas's `Stillwater.tsx`. It preserves
+path geometry, fills, strokes and source viewBoxes, using canvas image dimensions
+rather than rounded source dimensions. Figma's root display style, overflow and
+preserveAspectRatio are omitted as in the original native bundle. Only the
+lantern filter definition and references are removed; its native glow circles in
+`Hook.tsx` remain a deliberate approximation, not a converted blur. Filter changes
+still change the source fingerprint and require review of that approximation.
+Other browser-only content fails explicitly rather than being silently dropped.
+Re-running the command does not rewrite an unchanged bundle. `check:hook-art` is
+read-only and exits nonzero on drift, including a missing bundle. The normal
+mobile test suite also checks freshness, placement, paint and conversion fixtures.
+This command does not regenerate browser-extension toolbar icons.
+
 Artwork verification (2026-11-14): Expo SDK 58 / React Native 0.88.1,
 Node 24.22.1 / pnpm 10.26.1; Expo dependency alignment and Doctor passed;
 mobile tests and typecheck passed; iOS and Android JavaScript exports passed.
