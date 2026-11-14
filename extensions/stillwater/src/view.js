@@ -31,6 +31,9 @@ export function showResult(root, result, selectedCompany, onCopy) {
     element("p", `Checked ${new Date(result.checkedAt).toLocaleString()}`, "muted"));
   const provider = result.providers;
   root.append(element("p", `Directory: ${provider.directory}. Reports: ${provider.reputation}. Number metadata: ${provider.metadata}.`, "muted"));
+  if (result.metadata) {
+    root.append(element("p", `Number metadata fetched ${new Date(result.metadata.fetchedAt).toLocaleString()}; expires ${new Date(result.metadata.expiresAt).toLocaleString()}. Formatting/validity only, not ownership or scam evidence.`, "muted"));
+  }
 
   const evidence = element("details");
   evidence.append(element("summary", "Why this result?"));
@@ -53,9 +56,11 @@ export function showResult(root, result, selectedCompany, onCopy) {
       copy.type = "button";
       copy.addEventListener("click", () => onCopy(contact.number));
       entry.append(copy);
-      for (const source of contact.sources.filter(s => s.assertion === "listed" && s.freshness === "current")) {
+      entry.append(element("p", `Contact evidence: ${contact.freshness}. Confirm the region and service before using it.`, "muted"));
+      for (const source of contact.sources) {
         const sourceLine = element("p");
-        sourceLine.append(link("Review the official source before calling", source.sourceUrl));
+        sourceLine.append(link("Review the official source before calling", source.sourceUrl),
+          element("span", ` Reviewed ${new Date(source.reviewedAt).toLocaleString()}; expires ${new Date(source.expiresAt).toLocaleString()}. ${source.assertion}; ${source.freshness}.`));
         entry.append(sourceLine);
       }
       root.append(entry);

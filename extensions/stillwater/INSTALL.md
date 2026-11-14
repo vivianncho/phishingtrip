@@ -65,10 +65,19 @@ https://developer.apple.com/documentation/safariservices/packaging-and-distribut
 With current Xcode installed, run:
 
 ```sh
-xcrun safari-web-extension-packager /absolute/path/to/safari \
-  --app-name "Phishing Trip" --bundle-identifier YOUR.REVERSE.DOMAIN.Stillwater \
-  --swift --ios-only --copy-resources
+# First build the portable resources from the project root:
+node extensions/stillwater/scripts/build.mjs
+# On your Mac, use your own registered reverse-DNS identifier:
+node extensions/stillwater/scripts/package-safari.mjs com.company.Stillwater
 ```
+
+This invokes Apple's `safari-web-extension-packager` with Swift, iOS-only,
+copied resources and a separate native output directory at
+`generated-artifacts/stillwater-safari-native`. The generated Xcode project has
+a containing iOS app and Safari Web Extension target. Existing native output
+is never overwritten. The script fails explicitly on Linux; this environment
+cannot run Xcode or produce a signed `.ipa`. You can instead take `safari.zip`
+to Route A. No Expo configuration or mobile code is changed.
 
 For older Xcode versions where the tool has its previous name, use
 `xcrun safari-web-extension-converter --help` and review compatibility warnings.
@@ -83,10 +92,13 @@ https://developer.apple.com/documentation/safariservices/packaging-a-web-extensi
 
 1. On Google, Bing, or another HTTPS page (including an AI answer), open
    Phishing Trip.
-2. Choose **Find numbers on this page**. Discovery is local and bounded; it
+2. Select a complete phone number in Safari, then choose **Use selected number**
+   in Phishing Trip; no clipboard is needed. If Safari loses the selection when
+   opening its page menu, enable **Check directly on this page** first, then
+   select the number there. Alternatively choose **Find numbers on this page**. Discovery is local and bounded; it
    returns at most 20 number candidates, not trusted contacts.
 3. Select the number you meant to call, or paste a complete number yourself.
-4. For a national number, explicitly enter its country code (US, GB, etc.).
+4. Explicitly enter the intended country (US, GB, etc.), including for + numbers.
    Do not guess the country from where you are traveling.
 5. Optionally search the travel directory and choose the company you intended.
    This helps detect a number listed for a different company.
@@ -131,3 +143,37 @@ button or a blocked helper as a verification result.
   interception on an actual device before distributing.
 - For Chrome/Edge, verify the same permission and offline flows in an unpacked
   installation. Automated Node checks do not certify browser compatibility.
+
+### Revoke and clear
+
+**Clear number & result** removes the current form selection, candidates and
+evidence; a late response cannot bring them back. This cannot undo an already
+sent request. **Disconnect & remove saved settings** revokes the API origin
+permission and removes the only saved setting. Page access is separate: in
+Safari's page menu use Manage Extensions, or in Settings → Apps → Safari →
+Extensions → Phishing Trip deny the website or disable the extension (older iOS
+versions place Safari directly in Settings). Reload documents where the inline
+helper was enabled to remove its page listeners. Uninstall the containing app
+to remove its extension. None of these actions deletes upstream operator logs;
+review the service's retention policy before connecting.
+
+### Native release gate
+
+Not performed here: Apple packaging, code signing, installation, or device
+validation. Before distribution, use an actual iPhone/TestFlight build with
+the operator-approved HTTPS service and verify:
+
+- Select text and tap a `tel:` link after opt-in on ordinary and AI-answer pages.
+  Capture produces candidates only and never a request or dial action.
+- Select number/country/company, confirm the summary, tick consent, then check.
+  Inspect traffic: only `/api/checks` with the three allowlisted fields; no page
+  URL, text, referrer, cookies or history. Directory and availability requests
+  happen only when their own buttons are pressed.
+- Deny API/site permission; revoke during a delayed check; clear while waiting;
+  close/reopen Safari; go offline; test 400, 429 and 503 responses. No old match,
+  false all-clear or automatic retry should appear.
+- Check source dates, expired/conflicting evidence, metadata unavailability,
+  and a company with website-only support. Unknown is not a scam verdict.
+- VoiceOver reads controls, consent summary, loading/error text and sources;
+  verify large text and reduced motion. Record iOS/Safari version, build and
+  results, using synthetic numbers rather than travelers' private data.

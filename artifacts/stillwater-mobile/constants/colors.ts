@@ -12,4 +12,9 @@ const ocean = {
   warning: '#f4c77f', overlay: '#00000099',
   fishLight: '#a2ffeb', fishBody: '#52dbc8', fishDark: '#158b99',
 };
+// Scroll-linked descent layers, derived from the ocean palette (surface -> abyss).
+export const depth = {
+  sky: '#1d4a66', surface: '#16405c', shallow: '#0f2c47', mid: ocean.background, deep: '#060f1d', abyss: '#030914',
+  ray: '#3ef0d822', rayClear: '#3ef0d800', foam: '#a2ffeb55', bubble: '#a2ffeb40', bubbleRim: '#a2ffeb66', gauge: '#273a50',
+};
 export default { light: ocean, dark: ocean, radius: 14 };

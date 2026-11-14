@@ -4,17 +4,19 @@ import { documentMock, FakeNode, result, company } from "./fixtures.mjs";
 import { showResult } from "../src/view.js";
 
 test("popup requires consent, uploads no browsing text, clears stale verdicts and persists configuration only", async () => {
-  const dom = documentMock(), requests = [], writes = [];
+  const dom = documentMock(), requests = [], writes = [], removals = [];
+  let allowed = true, onRemoved;
   globalThis.document = dom;
   globalThis.Option = class extends FakeNode { constructor(label, value) { super("option"); this.textContent = label; this.value = value; } };
   globalThis.location = { hash: "#number=%2B18002211212", pathname: "/popup.html" };
   globalThis.history = { replaceState() {} };
   globalThis.browser = {
     runtime: { id: "fixture" },
-    permissions: { contains: async () => true, request: async () => true, remove: async () => true },
-    storage: { local: { get: async () => ({ apiOrigin: "https://backend.example" }), set: async v => writes.push(v), remove: async () => {} } },
+    permissions: { contains: async () => allowed, request: async () => true, remove: async () => true,
+      onRemoved: { addListener: listener => { onRemoved = listener; } } },
+    storage: { local: { get: async () => ({ apiOrigin: "https://backend.example" }), set: async v => writes.push(v), remove: async key => removals.push(key) } },
     tabs: { query: async () => [{ id: 1 }] },
-    scripting: { executeScript: async () => [{ result: ["+18002211212", "surrounding private text"] }] },
+    scripting: { executeScript: async ({ files }) => [{ result: files[0] === "selection.js" ? "+18002211212" : ["+18002211212", "surrounding private text"] }] },
   };
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options });
@@ -32,10 +34,17 @@ test("popup requires consent, uploads no browsing text, clears stale verdicts an
   await $("scan").fire("click");
   assert.equal(requests.length, 0, "local discovery does not upload numbers");
   assert.equal($("candidates").children.length, 1, "prose returned by a hostile page is rejected");
+  await $("selection").fire("click");
+  assert.equal($("phone").value, "+18002211212");
+  assert.equal(requests.length, 0, "selection capture is not consent to send");
+  $("consent").checked = true;
+  await $("check-form").fire("submit");
+  assert.equal(requests.length, 0, "even international numbers require an explicit country choice in the UI");
+  $("country").value = "US";
   $("consent").checked = true;
   await $("check-form").fire("submit");
   assert.equal(requests.length, 1);
-  assert.deepEqual(JSON.parse(requests[0].options.body), { phoneNumber: "+18002211212" });
+  assert.deepEqual(JSON.parse(requests[0].options.body), { phoneNumber: "+18002211212", defaultCountry: "US" });
   assert.equal($("result").className, "official_match");
   assert.equal($("hook").dataset.state, "official_match");
   assert.equal($("consent").checked, false, "each check requires fresh consent");
@@ -57,6 +66,30 @@ test("popup requires consent, uploads no browsing text, clears stale verdicts an
   assert.equal($("hook").dataset.state, "not_verified");
   assert.match($("error").textContent, /unavailable/);
   assert.equal($("check").disabled, false, "failure permits retry");
+
+  let release;
+  globalThis.fetch = async () => new Promise(resolve => { release = resolve; });
+  $("consent").checked = true;
+  const pending = $("check-form").fire("submit");
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  await $("clear").fire("click");
+  release(Response.json(result()));
+  await pending;
+  assert.equal($("phone").value, "");
+  assert.equal($("result").hidden, true, "clearing an in-flight check prevents late evidence from returning");
+  assert.equal($("consent").checked, false);
+
+  $("phone").value = "+18002211212"; $("country").value = "US"; $("consent").checked = true;
+  allowed = false;
+  onRemoved();
+  assert.equal($("consent").checked, false, "revocation invalidates consent");
+  $("consent").checked = true;
+  await $("check-form").fire("submit");
+  assert.match($("error").textContent, /Allow access/);
+  await $("disconnect").fire("click");
+  assert.deepEqual(removals, ["apiOrigin"]);
+  assert.equal($("phone").value, "");
+  assert.match($("destination").textContent, /No evidence service/);
 });
 
 test("evidence and alternatives render as text with source links, not HTML or dial links", () => {

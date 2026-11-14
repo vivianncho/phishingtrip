@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View, type TextProps } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { ActivityIndicator, Animated, type NativeScrollEvent, type NativeSyntheticEvent, Linking, Platform, Pressable, StyleSheet, Text, View, type TextProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Evidence, OfficialContact, ProviderState } from '@workspace/api-client-react';
 import { KeyboardAwareScrollViewCompat } from './KeyboardAwareScrollViewCompat';
 import { useColors } from '@/hooks/useColors';
+import { Depths } from './Depths';
 import palette from '@/constants/colors';
 const c = palette.light;
 
@@ -45,7 +46,9 @@ export function Button({ title, onPress, secondary, disabled, testID, icon }: {
 }
 export function Page({ children, title, back, tabs = false }: { children: React.ReactNode; title?: string; back?: boolean; tabs?: boolean }) {
   const inset = useSafeAreaInsets();
-  return <View style={s.page}><KeyboardAwareScrollViewCompat bottomOffset={70} keyboardDismissMode="on-drag"
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => scrollY.setValue(Math.max(0, e.nativeEvent.contentOffset.y));
+  return <View style={s.page}><Depths scrollY={scrollY} /><KeyboardAwareScrollViewCompat bottomOffset={70} keyboardDismissMode="on-drag" onScroll={onScroll} scrollEventThrottle={16} style={{ backgroundColor: 'transparent' }}
     contentContainerStyle={[s.content, { paddingTop: (Platform.OS === 'web' ? 67 : inset.top) + 20, paddingBottom: tabs ? 112 : (Platform.OS === 'web' ? 34 : inset.bottom) + 24 }]}>
     <View style={s.spread}>
       <View style={s.row}>

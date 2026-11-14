@@ -1,4 +1,4 @@
-import { apiOrigin, phoneCandidate, checkBody, companyPage, checkResult, apiRequest, CATEGORIES } from "./core.js";
+import { apiOrigin, phoneCandidate, checkBody, companyPage, checkResult, capabilities, apiRequest, CATEGORIES } from "./core.js";
 import { showResult } from "./view.js";
 import { DEFAULT_API_ORIGIN } from "./settings.js";
 
@@ -12,10 +12,11 @@ function resetResult() {
   checkedRevision++;
   $("result").replaceChildren(); $("result").hidden = true; $("consent").checked = false;
   $("hook").dataset.state = "idle"; status("hook-caption", "Hook is here with you.");
+  status("selection-summary", `Number: ${$("phone").value || "choose one"}. Country: ${$("country").value.toUpperCase() || "choose one"}. Company: ${selectedCompany()?.name || "none — number-only check"}.`);
 }
 function busyState(value) {
   busy = value;
-  for (const id of ["phone", "country", "company", "category", "company-search", "scan", "inline", "load-companies", "more-companies", "consent", "check", "disconnect"]) $(id).disabled = value;
+  for (const id of ["phone", "country", "company", "category", "company-search", "selection", "scan", "inline", "load-companies", "more-companies", "consent", "check", "disconnect", "availability"]) $(id).disabled = value;
   $("check").textContent = value ? "Checking the evidence…" : "Check this number";
 }
 async function permission() {
@@ -26,7 +27,7 @@ async function permission() {
 function selectedCompany() { return companies.find(c => c.id === $("company").value); }
 function selected(number) {
   if (busy) return;
-  resetResult(); $("phone").value = number; $("phone").focus();
+  $("phone").value = number; resetResult(); $("phone").focus();
   status("page-status", "Number selected locally. Review it, choose the country if needed, and confirm before checking.");
 }
 async function activeTabScript(file) {
@@ -54,16 +55,40 @@ async function loadCompanies(more = false) {
     $("company").replaceChildren(new Option("Not selected — check number only", ""));
     for (const company of companies) $("company").append(new Option(`${company.name} · ${CATEGORIES[company.category]}`, company.id));
     $("more-companies").hidden = nextOffset === null;
+    resetResult();
     status("directory-status", `${companies.length} of ${data.total} listed companies. Coverage is limited; some entries have website support only.`);
   } catch (error) {
     companies = []; nextOffset = null;
     $("company").replaceChildren(new Option("Not selected — check number only", ""));
     $("more-companies").hidden = true;
+    resetResult();
     status("directory-status", error.message || "Directory unavailable. No company was selected.");
   } finally { companyBusy = false; $("load-companies").disabled = busy; $("more-companies").disabled = busy; }
 }
 
 $("settings-toggle").addEventListener("click", () => setup($("setup").hidden));
+$("clear").addEventListener("click", () => {
+  $("phone").value = ""; $("country").value = ""; $("company").value = "";
+  $("candidates").replaceChildren(); resetResult(); status("error", "");
+  status("page-status", "Selected number and result cleared. No check history is stored.");
+});
+$("selection").addEventListener("click", async () => {
+  try {
+    const number = await activeTabScript("selection.js");
+    if (!phoneCandidate(number)) throw new Error("Select one complete phone number on the page, then try again. No text was sent.");
+    selected(number);
+  } catch (error) { status("page-status", error.message || "Selection unavailable. No number was sent."); }
+});
+$("availability").addEventListener("click", async () => {
+  try {
+    await permission();
+    const service = origin;
+    status("availability-status", "Requesting provider availability without a number…");
+    const data = capabilities(await apiRequest(service, "/capabilities"));
+    if (service !== origin) return;
+    status("availability-status", `As of ${new Date(data.checkedAt).toLocaleString()}: Directory ${data.providers.directory}; reports ${data.providers.reputation}; metadata ${data.providers.metadata}. ${data.limitations.join(" ")}`);
+  } catch { status("availability-status", "Provider availability unavailable. No number was sent or verified."); }
+});
 $("setup-form").addEventListener("submit", async event => {
   event.preventDefault();
   if (busy) return;
@@ -77,8 +102,10 @@ $("setup-form").addEventListener("submit", async event => {
     origin = next; companies = []; nextOffset = null; resetResult();
     $("company").replaceChildren(new Option("Not selected — check number only", ""));
     $("more-companies").hidden = true;
+    resetResult();
     if (previous && previous !== next) await api.permissions.remove({ origins: [`${previous}/*`] });
     status("destination", `Selected checks go to ${origin}.`);
+    status("availability-status", "Availability has not been requested for this service.");
     status("setup-status", "Connected. No number has been sent. You can now choose a number to check.");
   } catch (error) { status("setup-status", error.message || "Setup failed. Try opening the extension from the browser toolbar."); }
 });
@@ -93,6 +120,7 @@ $("disconnect").addEventListener("click", async () => {
     $("company").replaceChildren(new Option("Not selected — check number only", ""));
     $("more-companies").hidden = true; resetResult();
     status("destination", "No evidence service connected.");
+    status("availability-status", "Disconnected. Provider availability unknown.");
     status("setup-status", "Disconnected. Saved service settings and any displayed check were removed.");
   } catch { status("setup-status", "Could not remove access. Remove this service permission in browser extension settings."); }
 });
@@ -120,8 +148,9 @@ $("load-companies").addEventListener("click", () => loadCompanies());
 $("more-companies").addEventListener("click", () => loadCompanies(true));
 for (const id of ["phone", "country", "company"]) $(id).addEventListener("input", () => { resetResult(); status("error", ""); });
 for (const id of ["category", "company-search"]) $(id).addEventListener("input", () => {
-  resetResult(); companies = []; nextOffset = null; $("more-companies").hidden = true;
+  companies = []; nextOffset = null; $("more-companies").hidden = true;
   $("company").replaceChildren(new Option("Not selected — check number only", ""));
+  resetResult();
 });
 $("check-form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -129,14 +158,17 @@ $("check-form").addEventListener("submit", async event => {
   status("error", "");
   try {
     if (!$("consent").checked) throw new Error("Confirm the selected number can be sent before checking.");
+    if (!/^[A-Za-z]{2}$/.test($("country").value.trim())) throw new Error("Explicitly choose a two-letter country before sending.");
     const body = checkBody($("phone").value, $("country").value, $("company").value);
     const company = selectedCompany();
+    const revision = ++checkedRevision;
     busyState(true);
     await permission();
-    const revision = ++checkedRevision;
+    if (revision !== checkedRevision) return;
     $("result").replaceChildren(); $("result").hidden = true;
     $("hook").dataset.state = "searching"; status("hook-caption", "Hook is checking the evidence.");
     const result = checkResult(await apiRequest(origin, "/checks", { body }), body);
+    await permission();
     if (revision !== checkedRevision) return;
     $("hook").dataset.state = result.outcome;
     status("hook-caption", result.outcome === "official_match" ? "A listing match. Hook can rest a little." : result.outcome === "reports_found" ? "Pause. Hook found reports worth reviewing." : "Not sure yet. You still have a next step.");
@@ -145,9 +177,16 @@ $("check-form").addEventListener("submit", async event => {
       catch { status("error", `Copy is unavailable here. Select and copy this listed number: ${number}`); }
     });
   } catch (error) {
+    $("result").replaceChildren(); $("result").hidden = true;
     $("hook").dataset.state = "not_verified"; status("hook-caption", "No check completed. You can try another way.");
     status("error", error.message || "The check failed. No number was verified.");
   } finally { $("consent").checked = false; busyState(false); }
+});
+
+api?.permissions?.onRemoved?.addListener(() => {
+  resetResult();
+  status("availability-status", "Permissions changed. Provider availability must be requested again.");
+  status("error", "Browser access was revoked. Reconnect in Setup before checking.");
 });
 
 async function init() {

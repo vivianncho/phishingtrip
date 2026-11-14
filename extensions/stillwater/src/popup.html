@@ -19,7 +19,10 @@
         <button class="primary" type="submit">Save &amp; allow this service</button>
       </form>
       <p class="muted">The browser will request access to this service only. This does not grant ongoing access to search pages.</p>
+      <p class="muted">Safari: manage page access in the page menu → Manage Extensions, or Settings → Apps → Safari → Extensions → Stillwater. Deny website access or turn off the extension to revoke page access. Reload any page with the inline helper to remove it.</p>
       <button id="disconnect" type="button">Disconnect &amp; remove saved settings</button>
+      <button id="availability" type="button">Check provider availability</button>
+      <p id="availability-status" role="status">Availability has not been requested. Reports are not currently offered.</p>
       <p id="setup-status" role="status"></p>
     </section>
     <section aria-labelledby="main-heading">
@@ -28,6 +31,7 @@
       <div id="hook" class="fish" data-state="idle"><img src="icons/128.png" alt="Hook, your fish companion" width="96" height="96"><p id="hook-caption">Hook is here with you.</p></div>
       <p>Search results and AI answers can be wrong. Check the number, not where it appears.</p>
       <div class="page-tools">
+        <button id="selection" type="button">Use selected number</button>
         <button id="scan" type="button">Find numbers on this page</button>
         <button id="inline" type="button">Check directly on this page</button>
       </div>
@@ -36,9 +40,9 @@
       <form id="check-form">
         <label for="phone">Number to check</label>
         <input id="phone" type="tel" inputmode="tel" placeholder="+1 800 221 1212" maxlength="64" autocomplete="off" required>
-        <label for="country">Country for national numbers</label>
-        <input id="country" type="text" placeholder="US, GB, FR… or leave blank for + numbers" maxlength="2" pattern="[A-Za-z]{2}" autocomplete="off" autocapitalize="characters">
-        <p class="muted">Choose the number’s country. We do not infer it from your location.</p>
+        <label for="country">Country you intend to call</label>
+        <input id="country" type="text" placeholder="US, GB, FR…" maxlength="2" pattern="[A-Za-z]{2}" autocomplete="off" autocapitalize="characters" required>
+        <p class="muted">Explicitly choose the number’s country. We never infer it from the page or your location. A + calling code takes precedence.</p>
         <details id="directory">
           <summary>Which travel company? <span class="muted">(optional)</span></summary>
           <label for="category">Travel category</label>
@@ -51,9 +55,11 @@
           <select id="company"><option value="">Not selected — check number only</option></select>
           <button id="more-companies" type="button" hidden>Load more companies</button>
         </details>
-        <label class="consent"><input id="consent" type="checkbox" required><span>Send only this number, country, and selected company to my connected service.</span></label>
+        <p id="selection-summary" class="muted" aria-live="polite"></p>
+        <label class="consent"><input id="consent" type="checkbox" required><span>Send only the number, country, and company choice shown above to my connected service. No company selected means number-only evidence, not a company identity check.</span></label>
         <p id="destination" class="muted"></p>
         <button id="check" class="primary" type="submit">Check this number</button>
+        <button id="clear" type="button">Clear number &amp; result</button>
         <p id="error" class="error" role="alert"></p>
       </form>
       <section id="result" hidden aria-live="polite" aria-atomic="true" tabindex="-1"></section>

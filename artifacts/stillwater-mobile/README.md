@@ -54,3 +54,6 @@ Verified with Node 24.22.1 / pnpm 10.26.1, Expo 58.0.25, React Native 0.88.1:
 clean isolated frozen-lockfile install, focused form/privacy tests, full workspace
 typecheck, online Expo dependency alignment and Doctor, and iOS/Android/web
 JavaScript exports. Physical Expo Go / VoiceOver testing has not been performed.
+
+## Underwater scroll
+`components/Depths.tsx` renders a decorative backdrop behind every `Page`: scrolling sinks from a lit waterline with sun shafts into deep water, with parallax bubbles and a small depth marker. It is scroll-linked and reversible, non-interactive, hidden from accessibility, and colours come from `depth` in `constants/colors.ts`. With Reduce Motion on (checked live), ambient bubble drift and large parallax are disabled; only the colour descent remains.

@@ -53,12 +53,31 @@ function contact(c) {
   return c && text(c.id) && text(c.companyId) && text(c.number, 32) && /^\+[1-9]\d{6,14}$/.test(c.number) &&
     text(c.region) && text(c.service) && ["current", "stale", "unknown"].includes(c.freshness) && list(c.sources, evidence);
 }
+function metadata(m) {
+  return m === null || (m && m.provider === "twilio_basic" && typeof m.valid === "boolean" &&
+    (m.countryCode === null || text(m.countryCode, 2)) &&
+    (m.nationalFormat === null || text(m.nationalFormat, 64)) &&
+    Number.isFinite(Date.parse(m.fetchedAt)) && Number.isFinite(Date.parse(m.expiresAt)) &&
+    Date.parse(m.expiresAt) > Date.parse(m.fetchedAt) && typeof m.cached === "boolean");
+}
 
 export const CATEGORIES = {
   airline: "Airlines", hotel: "Hotels", vacation_rental: "Vacation rentals",
   car_rental: "Car rentals", booking_service: "Booking services",
   rail_transfer: "Rail & transfers", cruise: "Cruises", tour: "Tours",
 };
+
+export function capabilities(value) {
+  if (!value || !value.providers ||
+      !["active", "unavailable"].includes(value.providers.directory) ||
+      value.providers.reputation !== "unavailable" ||
+      !["disabled", "not_configured", "available", "success", "timeout", "unavailable", "rate_limited", "budget_exhausted", "invalid_response", "partial"].includes(value.providers.metadata) ||
+      !Number.isFinite(Date.parse(value.checkedAt)) ||
+      !list(value.limitations, v => text(v)) || value.reputationReportsAvailable !== false) {
+    throw new Error("Provider availability could not be confirmed. No number was verified.");
+  }
+  return value;
+}
 
 export function companyPage(value) {
   if (!value || !list(value.items, c => c && text(c.id, 64) && /^[a-z][a-z0-9-]{0,63}$/.test(c.id) &&
@@ -79,6 +98,7 @@ export function checkResult(value, body) {
       !Number.isFinite(Date.parse(value.checkedAt)) ||
       value.claimedCompanyId !== (body.claimedCompanyId ?? null) ||
       !list(value.evidence, evidence) || !list(value.alternatives, contact) ||
+      !metadata(value.metadata) ||
       !list(value.limitations, v => text(v)) ||
       !value.providers || !["active", "unavailable"].includes(value.providers.directory) ||
       !text(value.providers.reputation, 40) || !text(value.providers.metadata, 40)) {
@@ -109,7 +129,13 @@ export function checkResult(value, body) {
 
 export async function apiRequest(origin, path, { body, fetcher = fetch, timeout = 12000 } = {}) {
   const base = apiOrigin(origin);
-  if (!/^\/(?:checks|companies(?:\?[^#]*)?)$/.test(path)) throw new Error("Unsupported API operation.");
+  if (!/^\/(?:checks|capabilities|companies(?:\?[^#]*)?)$/.test(path)) throw new Error("Unsupported API operation.");
+  if (body) {
+    if (path !== "/checks" || Object.keys(body).some(key => !["phoneNumber", "defaultCountry", "claimedCompanyId"].includes(key))) {
+      throw new Error("Only selected check fields can be sent.");
+    }
+    body = checkBody(body.phoneNumber, body.defaultCountry ?? "", body.claimedCompanyId);
+  }
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
   try {
