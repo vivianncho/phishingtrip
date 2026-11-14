@@ -24,8 +24,234 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /checks:
+    post:
+      operationId: checkNumber
+      summary: Stateless evidence-based phone number check
+      description: National input requires defaultCountry. No account, history, safety verdict, or live reputation reports.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckInput"
+      responses:
+        "200":
+          description: Evidence evaluated, not a safety guarantee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckResult"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+  /companies:
+    get:
+      operationId: listCompanies
+      summary: Search the curated official directory
+      parameters:
+        - { in: query, name: search, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: category, schema: { type: string, enum: [airline] } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0, maximum: 10000, default: 0 } }
+      responses:
+        "200":
+          description: Companies ordered by stable ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyPage"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+  /companies/{id}:
+    get:
+      operationId: getCompany
+      summary: Company and sourced contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, pattern: "^[a-z][a-z0-9-]{0,63}$" }
+      responses:
+        "200":
+          description: Company details including stale contacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+  /capabilities:
+    get:
+      operationId: getCapabilities
+      summary: Evidence availability and limitations
+      responses:
+        "200":
+          description: Current configuration; metadata status does not imply coverage for every number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Capabilities"
+        "429": { $ref: "#/components/responses/RateLimited" }
 components:
+  responses:
+    BadRequest:
+      description: INVALID_INPUT, COUNTRY_REQUIRED, INVALID_COUNTRY, or INVALID_NUMBER. No input is echoed.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    NotFound:
+      description: COMPANY_NOT_FOUND or NOT_FOUND
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    TooLarge:
+      description: BODY_TOO_LARGE; JSON body maximum 2 KiB
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    UnsupportedMedia:
+      description: UNSUPPORTED_MEDIA_TYPE; application/json required
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    RateLimited:
+      description: RATE_LIMITED; retry after Retry-After seconds
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    Unavailable:
+      description: DIRECTORY_UNAVAILABLE; no unsupported fallback verdict
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
   schemas:
+    ApiProblem:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+    CheckInput:
+      type: object
+      additionalProperties: false
+      required: [phoneNumber]
+      properties:
+        phoneNumber:
+          type: string
+          minLength: 3
+          maxLength: 64
+          description: Full number only; no URLs, extensions, vanity letters or surrounding page text.
+        defaultCountry: { type: string, pattern: "^[A-Z]{2}$", description: Explicit ISO 3166-1 alpha-2 country for national numbers. No inferred locale. }
+        claimedCompanyId: { type: string, pattern: "^[a-z][a-z0-9-]{0,63}$" }
+    Freshness:
+      type: string
+      enum: [current, stale, unknown]
+    Evidence:
+      type: object
+      required: [id, kind, companyId, sourceUrl, sourceName, reviewedAt, expiresAt, freshness, assertion, number]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [official_contact, reputation_report] }
+        companyId: { type: [string, "null"] }
+        sourceUrl: { type: string, format: uri }
+        sourceName: { type: string }
+        reviewedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        freshness: { $ref: "#/components/schemas/Freshness" }
+        assertion: { type: string, enum: [listed, disputed, report] }
+        number: { type: string, pattern: "^\\+[1-9][0-9]{6,14}$" }
+    OfficialContact:
+      type: object
+      required: [id, companyId, number, region, service, freshness, sources]
+      properties:
+        id: { type: string }
+        companyId: { type: string }
+        number: { type: string }
+        region: { type: string }
+        service: { type: string }
+        freshness: { $ref: "#/components/schemas/Freshness" }
+        sources:
+          type: array
+          items: { $ref: "#/components/schemas/Evidence" }
+    Company:
+      type: object
+      required: [id, name, category, website, contacts]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string, enum: [airline] }
+        website: { type: string, format: uri }
+        contacts:
+          type: array
+          items: { $ref: "#/components/schemas/OfficialContact" }
+    CompanyPage:
+      type: object
+      required: [items, total, limit, offset, nextOffset]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Company" } }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        nextOffset: { type: [integer, "null"] }
+    ProviderState:
+      type: object
+      required: [directory, reputation, metadata]
+      properties:
+        directory: { type: string, enum: [active, unavailable] }
+        reputation: { type: string, enum: [unavailable] }
+        metadata:
+          type: string
+          enum: [disabled, not_configured, available, success, timeout, unavailable, rate_limited, budget_exhausted, invalid_response, partial]
+    NumberMetadata:
+      type: object
+      required: [provider, valid, countryCode, nationalFormat, fetchedAt, expiresAt, cached]
+      properties:
+        provider: { type: string, enum: [twilio_basic] }
+        valid: { type: boolean }
+        countryCode: { type: [string, "null"] }
+        nationalFormat: { type: [string, "null"] }
+        fetchedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        cached: { type: boolean }
+    CheckResult:
+      type: object
+      required: [normalizedNumber, countryCode, claimedCompanyId, outcome, label, reason, explanation, checkedAt, freshness, evidence, alternatives, limitations, providers, metadata]
+      properties:
+        normalizedNumber: { type: string }
+        countryCode: { type: [string, "null"] }
+        claimedCompanyId: { type: [string, "null"] }
+        outcome: { type: string, enum: [official_match, reports_found, not_verified] }
+        label: { type: string, enum: [Official match, Reports found, Not verified] }
+        reason: { type: string, enum: [EXACT_OFFICIAL_MATCH, ATTRIBUTABLE_REPORTS, SOURCE_CONFLICT, STALE_EVIDENCE, COMPANY_MISMATCH, NO_EVIDENCE] }
+        explanation: { type: string }
+        checkedAt: { type: string, format: date-time }
+        freshness: { $ref: "#/components/schemas/Freshness" }
+        evidence: { type: array, items: { $ref: "#/components/schemas/Evidence" } }
+        alternatives: { type: array, items: { $ref: "#/components/schemas/OfficialContact" } }
+        limitations: { type: array, items: { type: string } }
+        providers: { $ref: "#/components/schemas/ProviderState" }
+        metadata:
+          anyOf:
+            - { $ref: "#/components/schemas/NumberMetadata" }
+            - { type: "null" }
+    Capabilities:
+      type: object
+      required: [providers, limitations, reputationReportsAvailable, sourceMaxAgeDays, metadataCacheTtlSeconds, metadataCacheMaxEntries, checkedAt]
+      properties:
+        providers: { $ref: "#/components/schemas/ProviderState" }
+        limitations: { type: array, items: { type: string } }
+        reputationReportsAvailable: { type: boolean, enum: [false] }
+        sourceMaxAgeDays: { type: integer }
+        metadataCacheTtlSeconds: { type: integer }
+        metadataCacheMaxEntries: { type: integer }
+        checkedAt: { type: string, format: date-time }
     HealthStatus:
       type: object
       properties:

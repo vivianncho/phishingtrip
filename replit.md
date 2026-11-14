@@ -1,14 +1,16 @@
-# [Project name]
+# Stillwater
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Travel phone-number evidence checker with a separate fish-companion design prototype.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — API workflow command; uses its managed `PORT`
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/api-server run seed:directory` — idempotent sourced airline seed; does not refresh review dates
+- `pnpm --filter @workspace/api-server test` — decision, route, privacy and provider tests (requires seeded dev database)
 - Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
@@ -16,29 +18,39 @@ _Replace the heading above with the project's name, and this line with one sente
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- Validation: generated Zod API schemas, `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Build: esbuild (ESM bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/README.md` — complete API/setup/privacy/provider/source-review documentation
+- `lib/api-spec/openapi.yaml` — API contract; regenerate shared helpers after changes
+- `lib/db/src/schema/` — persistent curated directory only
+- `artifacts/api-server/src/verification/` — normalization, evidence rules, provider adapter and seed
+- `artifacts/mockup-sandbox/` — independently developed design; not wired to live data
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Directory matches are evidence of a published contact, never caller authentication or a safety guarantee.
+- No submitted-number history or browsing data is persisted. Do not add this through analytics or logs.
+- Reputation reports are not currently integrated.
+- Twilio Basic is optional, server-only and disabled by default. Do not add premium lookup fields.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Anonymous number checks, sourced airline contact search and evidence-source capabilities.
+The design's fictional scenarios are not real directory or reputation data.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+Keep backend work separate from the design prototype. Expo and native Safari extension implementation are outside this backend's scope.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- API title must remain `Api`; the health contract must remain unchanged.
+- Seed reruns preserve actual review times; an expired source needs a new human review.
+- Reverse-proxy trust is off by default. Verify proxy CIDRs before enabling address forwarding.
 
 ## Pointers
 
