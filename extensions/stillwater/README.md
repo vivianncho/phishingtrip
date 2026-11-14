@@ -38,7 +38,9 @@ with a workspace preview domain.
   extension-origin iframe for review/consent. No message proxy or remote fetch.
 - `src/popup.js`: consent-first controller; only API-origin settings persist.
 - `src/view.js`: source/evidence/alternative rendering using `textContent`.
-- `scripts/build.mjs`: two manifest packages and locally generated PNG icons.
+- `src/images/`: local reference Hook SVG layers; assembled at the canvas coordinates in the popup, with no remote artwork requests.
+- `src/icons/`: PNG toolbar/store icons rendered from those same layers.
+- `scripts/build.mjs`: two manifest packages, including the local SVG layers and PNG icons.
 - `scripts/package-safari.mjs`: Apple-tool native iOS project generation,
   independent of Expo, with no signing/upload or destructive overwrite.
 

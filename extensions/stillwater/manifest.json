@@ -15,7 +15,7 @@
     "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; connect-src https:; style-src 'self'; img-src 'self' data:;"
   },
   "web_accessible_resources": [{
-    "resources": ["popup.html", "popup.css", "popup.js", "view.js", "core.js", "settings.js", "icons/*.png"],
+    "resources": ["popup.html", "popup.css", "popup.js", "view.js", "core.js", "settings.js", "icons/*.png", "images/*.svg"],
     "matches": ["https://*/*"]
   }]
 }

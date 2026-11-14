@@ -28,7 +28,18 @@
     <section aria-labelledby="main-heading">
       <p class="eyebrow">One step at a time.</p>
       <h1 id="main-heading">Before you call,<br><span>check the waters.</span></h1>
-      <div id="hook" class="fish" data-state="idle"><img src="icons/128.png" alt="Hook, your fish companion" width="96" height="96"><p id="hook-caption">Hook is here with you.</p></div>
+      <div id="hook" class="fish" data-state="idle">
+        <svg class="fish-art" viewBox="0 0 480 400" fill="none" role="img" aria-label="Hook, your fish companion">
+          <path d="M62 6v65c0 24-29 26-29 7v-9l9 9" stroke="#ff858b" stroke-width="3" stroke-linecap="round" />
+          <image href="images/hook-figma-fins.svg" x="174" y="101" width="269.636" height="244.031" />
+          <image href="images/hook-figma-body.svg" x="77.245" y="134.627" width="275.822" height="194.202" />
+          <image href="images/hook-figma-face.svg" x="87" y="160.5" width="91.403" height="111.492" />
+          <g class="fish-eye-rest"><ellipse cx="143" cy="209" rx="32" ry="34" fill="#174854" /><path d="M122 209q21 17 42-2" stroke="#9dded0" stroke-width="3.5" stroke-linecap="round" /></g>
+          <image class="fish-lantern" href="images/hook-figma-lantern.svg" x="40.904" y="44.917" width="160.632" height="125.966" />
+          <g class="fish-search-waves" stroke="#d5f995" stroke-width="2" stroke-linecap="round"><path d="M61 186q-14 24 0 48m-15-62q-23 37 0 76" /></g>
+        </svg>
+        <p id="hook-caption">Hook is here with you.</p>
+      </div>
       <p>Search results and AI answers can be wrong. Check the number, not where it appears.</p>
       <div class="page-tools">
         <button id="selection" type="button">Use selected number</button>

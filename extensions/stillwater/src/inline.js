@@ -8,10 +8,11 @@
   const shadow = root.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
   style.textContent = `
-    :host{all:initial}button{font:600 14px system-ui;min-height:48px;border:1px solid #3ef0d8;border-radius:16px;padding:10px 16px;background:#0a1628;color:#3ef0d8;cursor:pointer}
-    .tools{display:flex;gap:8px;justify-content:flex-end}.close{border-color:#577083;color:#f1f5f9}
-    iframe{display:block;width:min(390px,calc(100vw - 24px));height:min(680px,calc(100dvh - 100px));border:1px solid #3ef0d8;border-radius:20px;margin-top:8px;background:#0a1628;box-shadow:0 8px 40px #0008}
-    p{font:13px system-ui;color:#f1f5f9;background:#0a1628;padding:10px;border-radius:10px;max-width:290px}
+    :host{all:initial}button{font:600 14px system-ui;min-height:48px;border:1px solid #d5f995;border-radius:24px;padding:10px 16px;background:#07313f;color:#d5f995;cursor:pointer}
+    button:focus-visible{outline:3px solid #d5f995;outline-offset:3px}
+    .tools{display:flex;gap:8px;justify-content:flex-end}.close{border-color:#85b8ad;color:#edf7ed}
+    iframe{display:block;width:min(390px,calc(100vw - 24px));height:min(680px,calc(100dvh - 100px));border:1px solid #d5f995;border-radius:20px;margin-top:8px;background:#07313f;box-shadow:0 8px 40px #021f3088}
+    p{font:13px system-ui;color:#edf7ed;background:#174854;padding:10px;border-radius:10px;max-width:290px}
   `;
   const tools = document.createElement("div"); tools.className = "tools";
   const check = document.createElement("button"); check.textContent = "Check selected number";
