@@ -9,6 +9,8 @@
     "./schema": "./src/schema/index.ts"
   },
   "scripts": {
+    "countries:check": "tsx src/country-constraints-cli.ts check",
+    "countries:upgrade": "tsx src/country-constraints-cli.ts upgrade",
     "push": "tsx src/push.ts",
     "push-force": "tsx src/push.ts --force",
     "test": "tsx --test src/*.test.ts",

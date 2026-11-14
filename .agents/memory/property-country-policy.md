@@ -16,3 +16,14 @@ and excludes ISO regions without numbering-plan support.
 filter validation aligned when country metadata changes. Invalid existing
 values require an explicit operator correction; do not infer locations from
 phone numbers or refresh contact evidence to repair identity metadata.
+
+Metadata upgrades require a coordinated maintenance window for database rules
+and all runtime/import workers, not just an atomic database constraint update.
+
+**Why:** PostgreSQL can commit the new allowlist atomically, but old processes
+can still validate against old metadata until they are drained and replaced.
+
+**How to apply:** Audit with the candidate metadata before rollout, resolve
+removed-country records explicitly, stop writers, update the constraint, then
+verify the candidate runtime before restoring traffic. Apply the same discipline
+when rolling back to metadata with fewer supported countries.
