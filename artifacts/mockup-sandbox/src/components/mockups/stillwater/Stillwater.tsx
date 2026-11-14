@@ -23,11 +23,16 @@ type FishState = Verdict | 'idle' | 'searching';
 type Company = { id: string; name: string; category: string; number: string; initials: string; detail: string; hours: string };
 const COMPANIES: Company[] = [
   { id: 'aer', name: 'Aster Air', category: 'Airlines', number: '+1 (202) 555-0142', initials: 'aa', detail: 'Flight changes & reservations', hours: '24-hour example support' },
-  { id: 'hotel', name: 'The Cove Hotel', category: 'Stays', number: '+1 (202) 555-0168', initials: 'c.', detail: 'Arrivals & reservations', hours: 'Example hours: 7am–11pm' },
-  { id: 'rail', name: 'Northline Rail', category: 'Transport', number: '+1 (202) 555-0193', initials: 'nr', detail: 'Tickets & journey changes', hours: 'Example hours: 6am–10pm' },
+  { id: 'hotel', name: 'The Cove Hotel', category: 'Hotels', number: '+1 (202) 555-0168', initials: 'c.', detail: 'Late arrivals & reservations', hours: '24-hour example front desk' },
+  { id: 'rail', name: 'Northline Rail', category: 'Rail & transfers', number: '+1 (202) 555-0193', initials: 'nr', detail: 'Tickets & journey changes', hours: 'Example hours: 6am–10pm' },
+  { id: 'rental', name: 'Drift Car Rental', category: 'Car rentals', number: '+1 (202) 555-0124', initials: 'dr', detail: 'Pickups & roadside help', hours: '24-hour example support' },
+  { id: 'stays', name: 'Nest Vacation Stays', category: 'Vacation rentals', number: '+1 (202) 555-0136', initials: 'ns', detail: 'Check-in & host support', hours: '24-hour example support' },
+  { id: 'booking', name: 'Wayfarer Bookings', category: 'Booking sites', number: '+1 (202) 555-0151', initials: 'wb', detail: 'Booking changes & refunds', hours: '24-hour example support' },
+  { id: 'cruise', name: 'Bluewake Cruises', category: 'Cruises', number: '+1 (202) 555-0174', initials: 'bc', detail: 'Boarding & reservation help', hours: 'Example hours: 7am–10pm' },
+  { id: 'tours', name: 'Roam Local Tours', category: 'Tours', number: '+1 (202) 555-0182', initials: 'rl', detail: 'Meeting points & tour changes', hours: 'Example hours: 6am–9pm' },
 ];
 const SCENARIOS: { id: Verdict; label: string; value: string; icon: IconName }[] = [
-  { id: 'official', label: 'Official match', value: '+1 (202) 555-0142', icon: 'shield' },
+  { id: 'official', label: 'Hotel match', value: '+1 (202) 555-0168', icon: 'shield' },
   { id: 'suspicious', label: 'Suspicious', value: '+1 (202) 555-0187', icon: 'alert' },
   { id: 'unverified', label: 'Not verified', value: '+1 (202) 555-0116', icon: 'help' },
 ];
@@ -48,11 +53,11 @@ function Fish({ state, tick }: { state: FishState; tick: number }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const captions: Record<FishState, string> = {
-    idle: 'Pip’s on lookout. Tap to say hello.',
+    idle: 'One step at a time. Pip’s here with you.',
     searching: 'Pip is scanning the example directory…',
     official: 'An example match. Pip can rest a little.',
-    suspicious: 'Pip dodged a hook. Best take another route.',
-    unverified: 'Pip’s curious. There isn’t enough to go on.',
+    suspicious: 'No rush. Pip found another way to get help.',
+    unverified: 'Not sure yet. You still have a next step.',
   };
   function swim() { setBoost(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setBoost(false), 950); }
   return <div className={`sw-fish-stage sw-status-${state}`}>
@@ -113,18 +118,18 @@ export function Stillwater() {
   }
   function removeContact(id: string) { const next = saved.filter(v => v !== id); setSaved(next); setRemoveId(null); try { localStorage.setItem('stillwater-demo-contacts', JSON.stringify(next)); } catch { /* In-memory state remains available. */ } notify('Contact removed from your trip.'); }
   function runCheck(value: string) {
-    if (!value.trim()) { setError('Add a number or company first. Pip needs a clue.'); return; }
+    if (!value.trim()) { setError('Paste a number or enter a travel company to begin.'); return; }
     setError(''); setInput(value); setResult(null); setChecking(true); setTick(t => t + 1);
     if (checkTimer.current) clearTimeout(checkTimer.current);
     checkTimer.current = setTimeout(() => { setResult({ verdict: resolveCheck(value), value: value.trim() }); setChecking(false); setTick(t => t + 1); }, 1850);
   }
   function submit(event: FormEvent) { event.preventDefault(); runCheck(input); }
   function changeTab(next: typeof tab) { setTab(next); setDetail(null); setRemoveId(null); }
-  function openDirectory() { setTab('directory'); setQuery(''); setCategory('All'); setDetail(COMPANIES[0]); }
-  const filtered = COMPANIES.filter(c => (category === 'All' || category === c.category) && `${c.name} ${c.number} ${c.category} ${c.number.replace(/\D/g, '')}`.toLowerCase().includes(query.toLowerCase().trim()));
+  function openDirectory() { setTab('directory'); setQuery(''); setCategory('All'); setDetail(result?.verdict === 'suspicious' ? COMPANIES.find(c => c.id === 'hotel')! : null); }
+  const filtered = COMPANIES.filter(c => (category === 'All' || category === c.category) && `${c.name} ${c.number} ${c.category} ${c.detail} ${c.number.replace(/\D/g, '')}`.toLowerCase().includes(query.toLowerCase().trim()));
   const company = result ? findCompany(result.value) : COMPANIES[0];
   const verdictIcon: Record<Verdict, IconName> = { official: 'shield', suspicious: 'alert', unverified: 'help' };
-  const titles: Record<Verdict, string> = { official: 'Official match', suspicious: 'Something’s fishy.', unverified: 'Not verified.' };
+  const titles: Record<Verdict, string> = { official: 'Official match', suspicious: 'Pause before calling.', unverified: 'Not verified.' };
   return <div className="stillwater">
     <div className="sw-shell">
       <header className="sw-header">
@@ -135,10 +140,10 @@ export function Stillwater() {
       {tab === 'check' && <main className={`sw-screen-enter ${result || checking ? 'sw-result-view' : ''}`}>
         <p className="sw-eyebrow"><span className="sw-dot" /> A little calm. A clearer call.</p>
         <h1 className="sw-title">{result ? <>Good instincts.<br /><span>Let’s take a look.</span></> : checking ? <>Hold the line.<br /><span>Pip’s on it.</span></> : <>Before you call,<br /><span>check the waters.</span></>}</h1>
-        {!result && !checking && <p className="sw-subtitle">Travel is unpredictable. Who you’re calling<br />shouldn’t have to be.</p>}
+        {!result && !checking && <p className="sw-subtitle">Travel feels stressful enough.<br />Check a hotel, rental, airline, or booking number.</p>}
         <Fish state={checking ? 'searching' : result?.verdict || 'idle'} tick={tick} />
         {!result && !checking && <form onSubmit={submit}>
-          <label className="sw-input-label" htmlFor="sw-number">Who’s on the other end?</label>
+          <label className="sw-input-label" htmlFor="sw-number">Unsure who to call? Start here.</label>
           <div className="sw-input-wrap"><Icon name="search" size={19} /><input id="sw-number" value={input} onChange={e => { setInput(e.target.value); setError(''); }} placeholder="Paste a number or company" autoComplete="off" spellCheck={false} aria-invalid={!!error} aria-describedby={error ? 'sw-validation' : undefined} />{input && <button type="button" className="sw-clear" onClick={() => setInput('')} aria-label="Clear search"><Icon name="close" size={16} /></button>}</div>
           {error && <p id="sw-validation" className="sw-error" role="alert">{error}</p>}
           <button className="sw-primary" type="submit"><Icon name="shield" size={19} />Check the number<Icon name="arrow" size={18} /></button>
@@ -148,9 +153,9 @@ export function Stillwater() {
           <div className="sw-result-kicker"><span>Demo result · not a live check</span><span>01 / EXAMPLE</span></div>
           <h2 className="sw-result-title"><Icon name={verdictIcon[result.verdict]} size={25} />{titles[result.verdict]}</h2>
           <p className="sw-number">{result.verdict === 'official' ? company.number : result.value}</p>
-          <p className="sw-result-company">{result.verdict === 'official' ? `${company.name} · fictional company` : result.verdict === 'suspicious' ? 'Impersonating Aster Air · fictional scenario' : 'No match in this example directory'}</p>
-          <p className="sw-result-copy">{result.verdict === 'official' ? 'This matches a fictional directory entry. A match is a clue, not a guarantee—caller IDs can still be spoofed. Never share passwords or one-time codes.' : result.verdict === 'suspicious' ? 'In this example, the number differs from the airline’s listed contact and asks for a transfer fee. Pause before paying. Find the example listed contact instead.' : 'We don’t have enough information to make a match. That doesn’t mean it’s fraudulent. Find contact details through the company’s own app or your booking.'}</p>
-          <details className="sw-evidence"><summary>Why this demo result?</summary><ul>{result.verdict === 'official' ? <><li>Example evidence: exact fictional directory match.</li><li>Source: this prototype’s sample list, not an external source.</li></> : result.verdict === 'suspicious' ? <><li>Example evidence: 0187 does not match the listed 0142.</li><li>The transfer-fee request is an invented scenario, not a report about a real number.</li></> : <><li>No exact match in our three fictional entries.</li><li>No real reputation data or user reports were checked.</li></>}</ul></details>
+          <p className="sw-result-company">{result.verdict === 'official' ? `${company.name} · fictional company` : result.verdict === 'suspicious' ? 'Impersonating The Cove Hotel · fictional scenario' : 'No match in this example directory'}</p>
+          <p className="sw-result-copy">{result.verdict === 'official' ? 'This matches an example listed contact. You have a next step. A match is not a guarantee; never share passwords or one-time codes.' : result.verdict === 'suspicious' ? 'In this hotel scam example, someone asks for an urgent payment to keep your room. You don’t need to decide now. Use the listed front desk contact instead.' : 'We couldn’t confirm this number. That doesn’t mean it’s a scam. Open your booking confirmation or the company’s own app to find a contact.'}</p>
+          <details className="sw-evidence"><summary>Why this demo result?</summary><ul>{result.verdict === 'official' ? <><li>Example evidence: exact fictional directory match.</li><li>Source: this prototype’s sample list, not an external source.</li></> : result.verdict === 'suspicious' ? <><li>Example evidence: 0187 does not match the hotel’s listed 0168.</li><li>A different number alone does not prove fraud. The urgent-payment request is an invented warning sign, not a report about a real number.</li></> : <><li>No exact match in this fictional travel directory.</li><li>No real reputation data or user reports were checked.</li></>}</ul></details>
           <button className="sw-primary" onClick={() => result.verdict === 'official' ? saveContact(company) : openDirectory()}><Icon name={result.verdict === 'official' ? 'plus' : 'book'} size={18} />{result.verdict === 'official' ? saved.includes(company.id) ? 'View in My Trips' : 'Save to My Trips' : result.verdict === 'suspicious' ? 'Find the example listed contact' : 'Explore example directory'}<Icon name="arrow" size={17} /></button>
         </section>}
         {result && <button className="sw-new-check" onClick={() => { setResult(null); setInput(''); setError(''); }}>Check something else</button>}
@@ -167,23 +172,23 @@ export function Stillwater() {
           <div className="sw-detail-card"><small>EXAMPLE LISTED CONTACT</small><p className="sw-number">{detail.number}</p><div className="sw-detail-facts"><div><span>Service</span><span>Travel support</span></div><div><span>Availability</span><span>{detail.hours}</span></div><div><span>Source</span><span>Prototype sample list</span></div></div><button className="sw-primary" onClick={() => saveContact(detail)}><Icon name="plus" size={18} />{saved.includes(detail.id) ? 'View saved contact' : 'Save to My Trips'}</button><button className="sw-secondary" onClick={() => { setTab('check'); runCheck(detail.number); }}><Icon name="shield" size={18} />Try this example number</button></div>
           <div className="sw-info-note"><Icon name="help" size={18} /><span>Not a real company or phone number. Calling is intentionally unavailable. For real travel support, use your booking or the company’s own app.</span></div>
         </> : <>
-          <p className="sw-eyebrow">The example directory</p><h1 className="sw-title">A better place<br /><span>to start.</span></h1><p className="sw-subtitle">A few familiar faces for your test swim.<br />Fictional companies. Clearly listed contacts.</p>
+          <p className="sw-eyebrow">Support for your whole trip</p><h1 className="sw-title">From check-in<br /><span>to heading home.</span></h1><p className="sw-subtitle">Hotels, stays, rentals, bookings, and more.<br />Choose an example. Take one step at a time.</p>
           <div className="sw-input-wrap sw-directory-search"><Icon name="search" size={18} /><input aria-label="Search example directory" placeholder="Search companies or numbers" value={query} onChange={e => setQuery(e.target.value)} />{query && <button className="sw-clear" onClick={() => setQuery('')} aria-label="Clear directory search"><Icon name="close" size={16} /></button>}</div>
-          <div className="sw-filter-row">{['All', 'Airlines', 'Stays', 'Transport'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)} aria-pressed={category === c}>{c}</button>)}</div>
+          <div className="sw-filter-row">{['All', 'Hotels', 'Vacation rentals', 'Car rentals', 'Booking sites', 'Airlines', 'Rail & transfers', 'Cruises', 'Tours'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)} aria-pressed={category === c}>{c}</button>)}</div>
           <p className="sw-section-label">{filtered.length} example {filtered.length === 1 ? 'contact' : 'contacts'}</p>
           <div className="sw-company-list">{filtered.map(c => <button className="sw-company" key={c.id} onClick={() => setDetail(c)}><span className="sw-company-symbol">{c.initials}</span><div className="sw-company-info"><strong>{c.name}</strong><p>{c.category} · fictional example</p></div><Icon name="arrow" size={17} /></button>)}</div>
-          {!filtered.length && <div className="sw-empty"><Icon name="search" size={30} /><h3>Uncharted waters.</h3><p>No example contacts match. Try “Aster” or browse all three companies.</p><button className="sw-secondary" onClick={() => { setQuery(''); setCategory('All'); }}>Show all examples</button></div>}
+          {!filtered.length && <div className="sw-empty"><Icon name="search" size={30} /><h3>Let’s try another way.</h3><p>No example contacts match. Try “hotel”, “rental”, or browse all travel contacts.</p><button className="sw-secondary" onClick={() => { setQuery(''); setCategory('All'); }}>Show all examples</button></div>}
           <div className="sw-info-note"><Icon name="book" size={18} /><span>This is a small, fictional directory for exploring the prototype. No entries have been verified against real companies.</span></div>
         </>}
       </main>}
 
       {tab === 'trips' && <main className="sw-screen-enter">
-        <p className="sw-eyebrow">Your pocket-sized backup</p><h1 className="sw-title">Less scrambling.<br /><span>More arriving.</span></h1><p className="sw-subtitle">Keep your example contacts together.<br />Saved locally. No account needed.</p>
+        <p className="sw-eyebrow">A little less to worry about</p><h1 className="sw-title">Your trip.<br /><span>Your backup plan.</span></h1><p className="sw-subtitle">Keep hotel, rental, and travel contacts together.<br />Example contacts saved here. No account needed.</p>
         <section className="sw-trip-hero"><div className="sw-trip-top"><span>My example trip</span><button className="sw-trip-edit" aria-label="Edit trip name" onClick={() => { setDraftName(tripName); setEditingTrip(v => !v); }}><Icon name="edit" size={16} /></button></div><h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 21, marginTop: 4, overflowWrap: 'anywhere' }}>{tripName}</h2><div className="sw-trip-route"><span>JFK</span><Icon name="plane" size={26} /><span>LIS</span></div><div className="sw-trip-small"><span>New York</span><span>Lisbon</span></div>
           {editingTrip && <form className="sw-trip-form" onSubmit={e => { e.preventDefault(); if (!draftName.trim()) return; setTripName(draftName.trim()); setEditingTrip(false); try { localStorage.setItem('stillwater-demo-trip', draftName.trim()); } catch { /* Session-only storage fallback. */ } notify('Your trip has a new name.'); }}><label htmlFor="sw-trip-name">Give this trip a name</label><input id="sw-trip-name" value={draftName} maxLength={48} onChange={e => setDraftName(e.target.value)} required /><button className="sw-primary" type="submit">Save trip name<Icon name="check" size={17} /></button></form>}
         </section>
         <p className="sw-section-label">Your example contacts · {saved.length}</p>
-        {saved.length ? <>{COMPANIES.filter(c => saved.includes(c.id)).map(c => <div key={c.id} className="sw-saved-row"><button className="sw-company-symbol" style={{ border: 0 }} onClick={() => { setTab('directory'); setDetail(c); }} aria-label={`View ${c.name}`}>{c.initials}</button><div className="sw-company-info"><strong>{c.name}</strong><p>{c.number}</p></div><button className="sw-remove" aria-label={`Remove ${c.name}`} onClick={() => setRemoveId(c.id)}><Icon name="trash" size={17} /></button></div>)}<button className="sw-secondary" onClick={() => { setTab('directory'); setDetail(null); }}><Icon name="plus" size={18} />Add an example contact</button></> : <div className="sw-empty"><Icon name="trip" size={32} /><h3>A little preparation goes far.</h3><p>Save a fictional airline, hotel, or rail contact. Your future self can take a breath.</p><button className="sw-primary" onClick={() => { setTab('directory'); setDetail(null); }}>Find an example contact<Icon name="arrow" size={18} /></button></div>}
+        {saved.length ? <>{COMPANIES.filter(c => saved.includes(c.id)).map(c => <div key={c.id} className="sw-saved-row"><button className="sw-company-symbol" style={{ border: 0 }} onClick={() => { setTab('directory'); setDetail(c); }} aria-label={`View ${c.name}`}>{c.initials}</button><div className="sw-company-info"><strong>{c.name}</strong><p>{c.number}</p></div><button className="sw-remove" aria-label={`Remove ${c.name}`} onClick={() => setRemoveId(c.id)}><Icon name="trash" size={17} /></button></div>)}<button className="sw-secondary" onClick={() => { setTab('directory'); setDetail(null); }}><Icon name="plus" size={18} />Add an example contact</button></> : <div className="sw-empty"><Icon name="trip" size={32} /><h3>Prepare now. Worry less later.</h3><p>Save example hotel, vacation rental, car, or tour contacts before you go. One place to turn if plans change.</p><button className="sw-primary" onClick={() => { setTab('directory'); setDetail(null); }}>Find an example contact<Icon name="arrow" size={18} /></button></div>}
         {removeId && <div className="sw-confirm" role="alertdialog" aria-label="Remove saved contact"><p>Remove {COMPANIES.find(c => c.id === removeId)?.name} from this trip? You can save it again from Directory.</p><div className="sw-confirm-actions"><button onClick={() => removeContact(removeId)}>Remove contact</button><button onClick={() => setRemoveId(null)}>Keep it</button></div></div>}
         <p className="sw-privacy"><Icon name="lock" size={14} /><span>Only example contacts are stored in this browser. This prototype doesn’t store real bookings or make phone calls.</span></p>
       </main>}
