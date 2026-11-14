@@ -34,7 +34,7 @@ export function mockupPreviewPlugin(): Plugin {
   }
 
   function isPreviewTarget(relativeToMockups: string): boolean {
-    return relativeToMockups
+    return !/\.(test|spec)\.tsx$/.test(relativeToMockups) && relativeToMockups
       .split(path.sep)
       .every((segment) => !segment.startsWith("_"));
   }
@@ -42,7 +42,7 @@ export function mockupPreviewPlugin(): Plugin {
   async function discoverComponents(): Promise<Array<DiscoveredComponent>> {
     const files = await glob(`${MOCKUPS_DIR}/**/*.tsx`, {
       cwd: root,
-      ignore: ["**/_*/**", "**/_*.tsx"],
+      ignore: ["**/_*/**", "**/_*.tsx", "**/*.test.tsx", "**/*.spec.tsx"],
     });
 
     return files.map((f) => ({

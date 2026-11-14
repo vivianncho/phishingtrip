@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -21,7 +22,7 @@ import colors from '@/constants/colors';
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 // Native bundles need an absolute origin. Browser preview stays same-origin.
-setBaseUrl(domain ? `https://${domain}` : null);
+setBaseUrl(Platform.OS !== 'web' && domain ? `https://${domain}` : null);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
