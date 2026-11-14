@@ -105,7 +105,7 @@ export async function mount(t, { directoryContacts = false } = {}) {
       return Response.json(company);
     }
     return Response.json({
-      items: [{ ...company, contacts: directoryContacts ? [contact] : [] }, { ...company, id: 'other', name: 'Other', contacts: [] }],
+      items: [{ ...company, contacts: Array.isArray(directoryContacts) ? directoryContacts : directoryContacts ? [contact] : [] }, { ...company, id: 'other', name: 'Other', contacts: [] }],
       total: 2, limit: 50, offset: 0, nextOffset: null,
     });
   };

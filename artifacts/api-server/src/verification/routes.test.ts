@@ -62,7 +62,7 @@ test("health, capabilities and real sourced directory validate against shared sc
     const company = (await request(app).get(`/api/companies/${id}`).expect(200)).body;
     GetCompanyResponse.parse(company);
     assert.ok(company.contacts.length > 0);
-    const source = company.contacts[0].sources[0];
+    const source = company.contacts.find((c: { id: string }) => c.id === `${id}-reservations`).sources[0];
     assert.equal(new URL(source.sourceUrl).hostname, new URL(company.website).hostname);
     assert.equal(source.reviewedAt, "2026-11-14T20:34:24.000Z");
   }

@@ -6,7 +6,7 @@ import { Busy, Button, Contact, Copy, s, WebLink } from './Ocean';
 import { CallOption } from './CallOption';
 import { PlacesSearch } from './PlacesSearch';
 import { useColors } from '@/hooks/useColors';
-import { samePhone, travelHelpTopic } from '@/lib/travelHelp';
+import { travelHelpContacts, travelHelpTopic } from '@/lib/travelHelp';
 
 export function TravelHelp({ excludedNumber, initialCompany = '', onSelect }: {
   excludedNumber: string; initialCompany?: string; onSelect: (number: string, companyId: string) => void;
@@ -74,17 +74,19 @@ export function TravelHelp({ excludedNumber, initialCompany = '', onSelect }: {
       <Copy>{topic.advice}</Copy>
       {!!error && <Copy accessibilityRole="alert">{error}</Copy>}
       {results && <>
-        <Copy style={s.small}>SOURCED OPTIONS · Confirm the company and service. Published general contacts may need to transfer you.</Copy>
+        <Copy style={s.small}>SOURCED OPTIONS · Confirm the company, dialing region, language and published service before calling.</Copy>
         {!results.items.length && <Copy>No sourced company matched. Try the exact name, remove the city for a brand-wide service, or use Google below.</Copy>}
         {results.items.map(business => {
-          const contacts = business.contacts.filter(c => c.freshness === 'current' && !samePhone(c.number, excludedNumber))
-            .sort((a, b) => Number(topic.terms.test(b.service)) - Number(topic.terms.test(a.service)));
+          const { matching, other } = travelHelpContacts(business.contacts, submitted.problem, excludedNumber);
+          const contacts = [...matching, ...other];
           return <View key={business.id} style={{ gap: 10 }}>
             <Copy style={s.h2}>{business.name}</Copy>
             {!!business.city && <Copy>{business.city} · {business.countryCode}</Copy>}
             <WebLink url={business.website} title={`${business.name} website`} />
+            {!!contacts.length && !matching.length && <Copy>No current department match for this issue. Use the official website or ask another published contact where to get help.</Copy>}
             {!contacts.length && <Copy>No different current phone contact is available. Use the company’s website rather than the number you just checked.</Copy>}
             {contacts.slice(0, 3).map(contact => <View key={contact.id}>
+              <Copy style={s.small}>{matching.includes(contact) ? 'Published service matches your issue' : 'Other published contact — help with this issue is not confirmed'}</Copy>
               <Contact contact={contact} onSelect={() => onSelect(contact.number, business.id)} />
               <CallOption number={contact.number} />
             </View>)}

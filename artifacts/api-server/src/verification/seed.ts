@@ -8,6 +8,7 @@ import { officialProvenance } from "./source-policy";
 import type { TravelCategory, ContactService } from "@workspace/api-zod";
 import { assertPropertyIdentities } from "./property-audit";
 import { exactPropertyAliasProvenance } from "./alias-review";
+import { seedAirlineDepartments } from "./airline-departments";
 
 // Human-reviewed against the official sites at the recorded instant. Rerunning is NOT a new review.
 export const reviewedAt = new Date("2026-11-14T20:34:24Z");
@@ -128,6 +129,7 @@ export async function seedDirectory(database: Pick<typeof db, "transaction"> = d
         expiresAt: new Date(entry.reviewedAt.getTime() + SOURCE_MAX_AGE_DAYS * 86400000),
       }).onConflictDoNothing();
     }
+    await seedAirlineDepartments(tx);
     for (const entry of websiteOnlySeed) {
       await tx.insert(companies).values(entry).onConflictDoNothing();
       const [existing] = await tx.select().from(companies).where(eq(companies.id, entry.id));

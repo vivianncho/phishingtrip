@@ -351,6 +351,43 @@ Initial contacts were reviewed on the airlines' own websites on
 | United Airlines | +1 800 864 8331 | US/Canada; reservations, English | https://www.united.com/en/us/fly/help/contact-reservations.html |
 | American Airlines | +1 800 433 7300 | US/Canada; reservations/ticket changes, English | https://www.aa.com/i18n/customer-service/contact-american/reservations-and-ticket-changes.jsp |
 
+### Airline department expansion
+
+The additional contacts below were individually checked against the full official
+pages on **2026-11-14 at 22:54:28 UTC**, with fixed expiry
+**2027-02-12 at 22:54:28 UTC**. They use the existing company identities and
+source-review/dispute workflow. Exact department, dialing region and language
+are in `service` and `region`; `serviceType` remains `general` because that
+enum distinguishes hotel/property routing, not airline departments.
+
+| Company | Number | Published department and region | Official page evidence |
+| --- | --- | --- | --- |
+| Delta Air Lines (`delta`) | +1 800 325 8224 | Baggage support — damaged, delayed or lost checked bags; US | [Damaged, Delayed or Lost Baggage](https://www.delta.com/us/en/baggage/delayed-lost-damaged-baggage), “When to Contact Us” → “Within the U.S.” |
+| United Airlines (`united`) | +1 800 335 2247 | Baggage Recovery Center — English and Spanish; US/Canada | [Contact reservations](https://www.united.com/en/us/fly/help/contact-reservations.html), “Additional contact information” → “Baggage Recovery Center” |
+| United Airlines (`united`) | +1 800 426 5561 | Reservations and ticket changes — Spanish; US/Canada | [Contact reservations](https://www.united.com/en/us/fly/help/contact-reservations.html), opening trip-change scope and “Other types of reservations support” → Spanish row |
+| American Airlines (`american`) | +1 800 633 3711 | Reservations and ticket changes — Spanish; US/Canada | [Reservations and ticket changes](https://www.aa.com/i18n/customer-service/contact-american/reservations-and-ticket-changes.jsp), “Within the U.S. and Canada” → Spanish row |
+
+`src/verification/airline-departments.ts` retains short exact excerpts alongside
+each import definition. The main transactional `seed:directory` command adds
+these rows without changing existing reservations evidence or operator reviews.
+Reruns preserve expiry and disputes and reject conflicting company/contact identities.
+No schema migration or new provider is needed.
+
+The [American baggage page](https://www.aa.com/i18n/customer-service/contact-american/baggage.jsp)
+was also inspected: it offers a web contact form, not a dedicated US baggage
+number. No baggage telephone was inferred from its general reservations line.
+United's baggage-resolution page showed differing international numbers in
+different paragraphs; neither was imported. Only its independently confirmed
+US/Canada Baggage Recovery Center number is included.
+
+Travel Help ranks exact published department descriptions locally. Flight-change
+matches require change/rebooking wording, not merely “reservations”; baggage
+matches require bag/baggage/luggage wording, not simply “lost”. Other current
+contacts remain visibly labeled as **not confirmed** for the issue, with an
+explicit no-department-match message when applicable. Stale, disputed, unknown
+and already checked numbers are excluded. Language and region are displayed,
+not guessed from the traveler's location or issue text.
+
 Freshness expires at the **earlier** of explicit `expiresAt` and 90 days after
 `reviewedAt`. Future, invalid, reversed, missing, or off-domain provenance
 cannot support an official match. At exactly expiry a source is stale.
