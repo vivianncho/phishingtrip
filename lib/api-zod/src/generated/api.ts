@@ -110,6 +110,10 @@ export const CheckNumberResponse = zod.object({
 
 
 /**
+ * Search canonical names, locations and curated source-backed property aliases.
+ * Aliases help discovery only; every result retains its exact property ID.
+ * Ambiguous searches return all matching listings in stable ID order, not a
+ * verified identity. Phone checks never use fuzzy names or aliases as evidence.
  * @summary Search the curated official directory
  */
 export const listCompaniesQuerySearchMax = 80;
@@ -128,11 +132,11 @@ export const listCompaniesQueryOffsetMax = 10000;
 
 
 export const ListCompaniesQueryParams = zod.object({
-  "search": zod.coerce.string().max(listCompaniesQuerySearchMax).optional(),
+  "search": zod.coerce.string().max(listCompaniesQuerySearchMax).optional().describe('Case-insensitive literal substring, including curated local-language property and city spellings. No fuzzy matching or automatic translation.'),
   "category": zod.enum(['airline', 'hotel', 'vacation_rental', 'car_rental', 'booking_service', 'rail_transfer', 'cruise', 'tour']).optional(),
   "listingType": zod.enum(['organization', 'brand', 'property']).optional(),
   "brandId": zod.coerce.string().regex(listCompaniesQueryBrandIdRegExp).optional(),
-  "city": zod.coerce.string().min(1).max(listCompaniesQueryCityMax).optional(),
+  "city": zod.coerce.string().min(1).max(listCompaniesQueryCityMax).optional().describe('Case-insensitive exact canonical city or curated city alias. Does not match hotel-name aliases.'),
   "countryCode": zod.coerce.string().regex(listCompaniesQueryCountryCodeRegExp).optional(),
   "limit": zod.coerce.number().int().min(1).max(listCompaniesQueryLimitMax).default(listCompaniesQueryLimitDefault),
   "offset": zod.coerce.number().int().min(listCompaniesQueryOffsetMin).max(listCompaniesQueryOffsetMax).default(listCompaniesQueryOffsetDefault)

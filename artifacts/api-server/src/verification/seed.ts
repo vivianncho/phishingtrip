@@ -1,4 +1,4 @@
-import { db, pool, companies, officialContacts, contactSources } from "@workspace/db";
+import { db, pool, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
 import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { logger } from "../lib/logger";
 import { SOURCE_MAX_AGE_DAYS } from "./policy";
@@ -59,6 +59,28 @@ const propertySeed = [
     city: "San Francisco", subdivision: "California", countryCode: "US" },
 ] as const;
 
+// Spellings read from these localized official property pages on 2026-11-14.
+// These do not add or renew any telephone evidence. Never generate aliases
+// from fuzzy brand matches or guessed translations.
+const aliasReviewedAt = new Date("2026-11-14T21:03:04Z");
+export const propertyAliasSeed = [
+  { id: "nycmq-name-ja", companyId: "marriott-nycmq", kind: "name", locale: "ja",
+    value: "ニューヨーク・マリオット・マーキス",
+    sourceUrl: "https://www.marriott.com/ja/hotels/nycmq-new-york-marriott-marquis/overview/" },
+  { id: "nycmq-city-ja", companyId: "marriott-nycmq", kind: "city", locale: "ja",
+    value: "ニューヨーク",
+    sourceUrl: "https://www.marriott.com/ja/hotels/nycmq-new-york-marriott-marquis/overview/" },
+  { id: "nycmq-city-es", companyId: "marriott-nycmq", kind: "city", locale: "es",
+    value: "Nueva York",
+    sourceUrl: "https://www.marriott.com/es/hotels/nycmq-new-york-marriott-marquis/overview/" },
+  { id: "sfodt-name-ja", companyId: "marriott-sfodt", kind: "name", locale: "ja",
+    value: "サンフランシスコ・マリオット・マーキス",
+    sourceUrl: "https://www.marriott.com/ja/hotels/sfodt-san-francisco-marriott-marquis/overview/" },
+  { id: "sfodt-city-ja", companyId: "marriott-sfodt", kind: "city", locale: "ja",
+    value: "サンフランシスコ",
+    sourceUrl: "https://www.marriott.com/ja/hotels/sfodt-san-francisco-marriott-marquis/overview/" },
+] as const;
+
 // No invented phone contacts: these companies direct users to their official help
 // sites until a specific number and its regional/service scope can be reviewed.
 const websiteOnlySeed = [
@@ -105,6 +127,20 @@ export async function seedDirectory(database: Pick<typeof db, "transaction"> = d
       await tx.insert(companies).values(entry).onConflictDoNothing();
       const [existing] = await tx.select().from(companies).where(eq(companies.id, entry.id));
       if (existing?.website !== entry.website || existing.category !== entry.category) throw new Error("Seed company provenance conflict");
+    }
+    for (const entry of propertyAliasSeed) {
+      const [property] = await tx.select().from(companies).where(eq(companies.id, entry.companyId));
+      // Require provenance for this exact property, not just any brand page.
+      if (!property || property.listingType !== "property" || !property.propertyCode ||
+          !officialProvenance(entry.sourceUrl, property.website) ||
+          !new URL(entry.sourceUrl).pathname.includes(`/hotels/${property.propertyCode.toLowerCase()}-`)) {
+        throw new Error("Seed alias provenance conflict");
+      }
+      await tx.insert(propertyAliases).values({ ...entry, reviewedAt: aliasReviewedAt }).onConflictDoNothing();
+      const [existing] = await tx.select().from(propertyAliases).where(eq(propertyAliases.id, entry.id));
+      if (!existing || Object.entries(entry).some(([key, value]) => existing[key as keyof typeof existing] !== value)) {
+        throw new Error("Seed alias conflict");
+      }
     }
   });
 }

@@ -275,6 +275,10 @@ export const getListCompaniesUrl = (params?: ListCompaniesParams,) => {
 }
 
 /**
+ * Search canonical names, locations and curated source-backed property aliases.
+ * Aliases help discovery only; every result retains its exact property ID.
+ * Ambiguous searches return all matching listings in stable ID order, not a
+ * verified identity. Phone checks never use fuzzy names or aliases as evidence.
  * @summary Search the curated official directory
  */
 export const listCompanies = async (params?: ListCompaniesParams, options?: Parameters<typeof customFetch>[1]): Promise<CompanyPage> => {

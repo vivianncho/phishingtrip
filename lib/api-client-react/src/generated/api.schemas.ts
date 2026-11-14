@@ -312,6 +312,7 @@ export type UnavailableResponse = ApiProblem;
 
 export type ListCompaniesParams = {
 /**
+ * Case-insensitive literal substring, including curated local-language property and city spellings. No fuzzy matching or automatic translation.
  * @maxLength 80
  */
 search?: string;
@@ -322,6 +323,7 @@ listingType?: ListingType;
  */
 brandId?: string;
 /**
+ * Case-insensitive exact canonical city or curated city alias. Does not match hotel-name aliases.
  * @minLength 1
  * @maxLength 80
  */

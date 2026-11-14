@@ -1,5 +1,5 @@
-import { db, companies, officialContacts, contactSources } from "@workspace/db";
-import { asc, eq, ilike, and, or, sql } from "drizzle-orm";
+import { db, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
+import { asc, eq, ilike, and, or, sql, exists } from "drizzle-orm";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
 import { evidenceFreshness, officialProvenance } from "./source-policy";
 export { evidenceFreshness } from "./source-policy";
@@ -54,11 +54,21 @@ export const directory: Directory = {
   async list(search, category, limit, offset, filters = {}) {
     const escape = (value: string) => value.replace(/[\\%_]/g, "\\$&");
     const pattern = `%${escape(search)}%`;
-    const where = and(search ? or(...[companies.name, companies.city, companies.address, companies.propertyCode, companies.subdivision].map((column) => ilike(column, pattern))) : undefined,
+    // EXISTS preserves one result per exact property even when several aliases
+    // match. City filters use only city aliases, never a hotel-name alias.
+    const aliasMatch = (value: string, kind?: "city") => and(
+      eq(companies.listingType, "property"),
+      exists(db.select({ id: propertyAliases.id }).from(propertyAliases).where(and(
+        eq(propertyAliases.companyId, companies.id),
+        kind ? eq(propertyAliases.kind, kind) : undefined,
+        ilike(propertyAliases.value, value),
+      ))),
+    );
+    const where = and(search ? or(...[companies.name, companies.city, companies.address, companies.propertyCode, companies.subdivision].map((column) => ilike(column, pattern)), aliasMatch(pattern)) : undefined,
       category ? eq(companies.category, category as Company["category"]) : undefined,
       filters.listingType ? eq(companies.listingType, filters.listingType) : undefined,
       filters.brandId ? eq(companies.brandId, filters.brandId) : undefined,
-      filters.city ? ilike(companies.city, escape(filters.city)) : undefined,
+      filters.city ? or(ilike(companies.city, escape(filters.city)), aliasMatch(escape(filters.city), "city")) : undefined,
       filters.countryCode ? eq(companies.countryCode, filters.countryCode) : undefined);
     const rows = await db.select({ id: companies.id }).from(companies).where(where).orderBy(asc(companies.id)).limit(limit).offset(offset);
     const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(companies).where(where);

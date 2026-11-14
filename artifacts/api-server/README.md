@@ -57,11 +57,43 @@ curl -s localhost:80/api/checks -H 'Content-Type: application/json' \
 ```
 
 Directory `search` also checks address, city, subdivision and official property
-code. `city` is an exact case-insensitive literal filter (maximum 80 characters);
+code, plus curated hotel-name and city aliases. `city` is an exact
+case-insensitive canonical city or city-alias filter (maximum 80 characters);
 `countryCode` is uppercase ISO alpha-2; `brandId` is a stable parent listing ID.
 Filters combine with category/search/pagination. Service-scoped alternatives
 only include current contacts for the selected listing and requested service;
 they never substitute another hotel or brand central reservations.
+
+### Local-language property discovery
+
+Alias spellings were read from official localized property pages on
+**2026-11-14 at 21:03 UTC**:
+
+| Property ID | Name alias | City alias | Official source |
+| --- | --- | --- | --- |
+| `marriott-nycmq` | ニューヨーク・マリオット・マーキス | ニューヨーク | https://www.marriott.com/ja/hotels/nycmq-new-york-marriott-marquis/overview/ |
+| `marriott-nycmq` | — | Nueva York | https://www.marriott.com/es/hotels/nycmq-new-york-marriott-marquis/overview/ |
+| `marriott-sfodt` | サンフランシスコ・マリオット・マーキス | サンフランシスコ | https://www.marriott.com/ja/hotels/sfodt-san-francisco-marriott-marquis/overview/ |
+
+`property_aliases` stores each spelling's exact property ID, kind (`name` or
+`city`), locale, source URL and fixed human review instant. Apply the additive
+schema with `pnpm --filter @workspace/db run push`, then rerun `seed:directory`.
+Seed reruns do not renew spelling or phone review dates and reject conflicting
+alias identities. New aliases require a human to read an official page for the
+exact property, not infer a translation or use brand similarity.
+
+`search` uses case-insensitive **literal substrings**, including aliases;
+`city` matches only an exact canonical city or curated city alias, not a hotel
+name. SQL wildcard characters are literal. No fuzzy matching, automatic
+translation, or automatic transliteration is performed. Alias joins cannot
+duplicate properties or inflate pagination totals. An ambiguous query such as
+`マリオット・マーキス` returns both properties in stable ID order; travelers must
+choose the actual property using its canonical address and ID. All existing
+filters still combine with aliases.
+
+Aliases are discovery metadata only, not contact evidence. They never alter
+the canonical company response, property IDs, contact freshness, or number
+verification. `/checks` still requires the exact listing ID and phone number.
 
 `GET /api/travel-safety` returns short, category-specific educational warnings
 and next steps, referencing FTC travel-scam advice. `POST /api/checks` also
