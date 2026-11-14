@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { getCountryCallingCode } from 'libphonenumber-js/min';
 import { useCompanion } from '@/context/Companion';
 import { Button, Copy, Page, s } from '@/components/Ocean';
-import { INTERNATIONAL, countryCodes } from '@/lib/checks';
+import { INTERNATIONAL } from '@/lib/checks';
 import { useColors } from '@/hooks/useColors';
 
 export default function CountryScreen() {
@@ -14,7 +14,7 @@ export default function CountryScreen() {
   const options = useMemo(() => {
     let names: Intl.DisplayNames | undefined;
     try { names = new Intl.DisplayNames(['en'], { type: 'region' }); } catch { /* ISO codes remain explicit. */ }
-    return countryCodes.map(code => ({ code, label: names?.of(code) ?? code, calling: getCountryCallingCode(code) })).sort((a, b) => a.label.localeCompare(b.label));
+    return (['US', 'MX', 'CA'] as const).map(code => ({ code, label: names?.of(code) ?? code, calling: getCountryCallingCode(code) }));
   }, []);
   const filtered = options.filter(option => `${option.label} ${option.code} +${option.calling}`.toLowerCase().includes(search.toLowerCase()));
   function choose(country: string) { setDraft(value => ({ ...value, country })); router.back(); }

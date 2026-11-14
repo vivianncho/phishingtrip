@@ -2,6 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { A, B, act, mobile, mount, result } from './support/mount.mjs';
 
+test('country picker offers only US, Mexico and Canada with their calling codes', async t => {
+  const h = await mount(t);
+  await h.show(mobile.CountryScreen);
+  const countryIds = h.tree.root.findAll(node => typeof node.type === 'string' && /^country-[A-Z]{2}$/.test(node.props.testID ?? '')).map(node => node.props.testID);
+  assert.deepEqual(countryIds, ['country-US', 'country-MX', 'country-CA']);
+  const labels = h.tree.root.findAll(node => node.type === 'Text').map(node => node.children.join('')).join('\n');
+  assert.match(labels, /US · \+1/);
+  assert.match(labels, /MX · \+52/);
+  assert.match(labels, /CA · \+1/);
+  assert.ok(h.find('country-international'));
+  for (const code of ['US', 'MX', 'CA']) {
+    await h.press(`country-${code}`);
+    assert.equal(h.companion.draft.country, code);
+  }
+  assert.equal(h.posts.length, 0);
+});
+
 test('typing, country selection, company choice and directory prefill never check automatically', async t => {
   const h = await mount(t);
   await h.type(A);

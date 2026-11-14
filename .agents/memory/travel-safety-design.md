@@ -37,3 +37,9 @@ Figma references supply the fish artwork, lighting and visual styling, not repla
 **Why:** The user requested "Use the same fish design and light and designs, but keep the words of original made here."
 
 **How to apply:** Preserve Phishing Trip's original wording, Hook's name and existing interactions when applying reference visuals. Do not import the reference product's name, training content or navigation.
+
+Limit the phone country-code picker to the United States, Mexico and Canada.
+
+**Why:** The user explicitly requested narrowing country area-code selections to those three countries.
+
+**How to apply:** Keep this restriction on country choices; do not infer a request to delete overseas directory records or block explicit international-format numbers.
