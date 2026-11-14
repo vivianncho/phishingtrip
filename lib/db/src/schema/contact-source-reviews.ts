@@ -2,7 +2,9 @@ import { pgTable, text, timestamp, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { contactSources } from "./contact-sources";
 
-// Append-only in the maintenance workflow; not evidence consumed by verdicts.
+// Append-only for operator roles (lib/db/security/contact-review-roles.sql).
+// Owner administration bypasses ACLs; never use an owner login for operators/API.
+// Not evidence consumed by verdicts.
 export const contactSourceReviews = pgTable("contact_source_reviews", {
   id: text("id").primaryKey(),
   sourceId: text("source_id").notNull().references(() => contactSources.id),

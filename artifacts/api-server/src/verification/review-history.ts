@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db, contactSources, contactSourceReviews } from "@workspace/db";
+import { historyDb as db, contactSources, contactSourceReviews } from "@workspace/db";
 import { SourceReviewError } from "./source-review";
 
 const historyInput = z.object({

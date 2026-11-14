@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { db, companies, officialContacts, contactSources, contactSourceReviews } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
+import { reviewDb as db, apiDb, companies, officialContacts, contactSources, contactSourceReviews } from "@workspace/db";
 import type { ContactSourceRow } from "@workspace/db";
 import { SOURCE_MAX_AGE_DAYS, SOURCE_REVIEW_WARNING_DAYS } from "./policy";
 import { DAY_MS, effectiveExpiry, evidenceFreshness, officialProvenance } from "./source-policy";
@@ -38,7 +38,7 @@ export function reviewQueueItem(subject: ReviewSubject, now = Date.now(), days =
     expectedFingerprint: reviewFingerprint({ source: s, contact, company }) };
 }
 
-export async function listSourceReviews(days = SOURCE_REVIEW_WARNING_DAYS, now = Date.now(), database: Database = db) {
+export async function listSourceReviews(days = SOURCE_REVIEW_WARNING_DAYS, now = Date.now(), database: Database = apiDb) {
   if (!Number.isInteger(days) || days < 0 || days > SOURCE_MAX_AGE_DAYS) throw new SourceReviewError("Days must be an integer from 0 to 90");
   const rows = await database.select({ source: contactSources, contact: officialContacts, company: companies })
     .from(contactSources).innerJoin(officialContacts, eq(contactSources.contactId, officialContacts.id))
@@ -81,11 +81,13 @@ export function validateSourceReview(subject: ReviewSubject, input: unknown, now
 export async function recordSourceReview(input: unknown, database: Database = db) {
   const parsed = sourceReviewInput.parse(input);
   return database.transaction(async (tx) => {
-    // Lock all provenance inputs so a review cannot race a contact/company edit.
+    // A fixed-search-path, owner-controlled function locks provenance without
+    // giving reviewers UPDATE access to company/contact data.
+    await tx.execute(sql`select public.lock_contact_review_subject(${parsed.sourceId})`);
     const [subject] = await tx.select({ source: contactSources, contact: officialContacts, company: companies })
       .from(contactSources).innerJoin(officialContacts, eq(contactSources.contactId, officialContacts.id))
       .innerJoin(companies, eq(officialContacts.companyId, companies.id))
-      .where(eq(contactSources.id, parsed.sourceId)).for("update");
+      .where(eq(contactSources.id, parsed.sourceId));
     if (!subject) throw new SourceReviewError("Source not found");
     const recordedAt = new Date();
     const review = validateSourceReview(subject, input, recordedAt.getTime());

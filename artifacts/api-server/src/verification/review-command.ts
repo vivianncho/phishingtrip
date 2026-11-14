@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { pool } from "@workspace/db";
+import { closeDatabasePools, reviewDb } from "@workspace/db";
 import { listSourceReviews, recordSourceReview, SourceReviewError } from "./source-review";
 import { SOURCE_REVIEW_WARNING_DAYS } from "./policy";
 import { ZodError } from "zod";
@@ -14,7 +14,7 @@ async function main() {
   const [command, ...args] = process.argv.slice(2);
   let result: unknown;
   if (command === "queue" && (args.length === 0 || (args.length === 2 && args[0] === "--days" && /^\d+$/.test(args[1]!)))) {
-    result = await listSourceReviews(args.length ? Number(args[1]) : SOURCE_REVIEW_WARNING_DAYS);
+    result = await listSourceReviews(args.length ? Number(args[1]) : SOURCE_REVIEW_WARNING_DAYS, Date.now(), reviewDb);
   } else if (command === "review" && args.length === 1) {
     result = await recordSourceReview(JSON.parse(await readFile(args[0]!, "utf8")));
   } else if (command === "alias-list" && args.length <= 1) {
@@ -43,4 +43,4 @@ main().catch((error: unknown) => {
     "Review command failed; check configuration and database setup.";
   process.stderr.write(message + "\n");
   process.exitCode = 1;
-}).finally(() => pool.end());
+}).finally(closeDatabasePools);

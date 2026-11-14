@@ -10,7 +10,8 @@
   "scripts": {
     "push": "tsx src/push.ts",
     "push-force": "tsx src/push.ts --force",
-    "test": "tsx --test src/*.test.ts"
+    "test": "tsx --test src/*.test.ts",
+    "access:configure": "node security/configure-access.mjs"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

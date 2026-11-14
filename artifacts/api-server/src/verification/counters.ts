@@ -1,4 +1,4 @@
-import { pool } from "@workspace/db";
+import { apiPool as pool } from "@workspace/db";
 
 export type CounterRule = { key: string; limit: number; amount: number; windowMs: number };
 export type CounterResult = { allowed: boolean; deniedKey?: string; retryAfter: number };

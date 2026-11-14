@@ -1,5 +1,5 @@
-import { db, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
 import { asc, eq, ilike, and, or, sql, exists, isNull } from "drizzle-orm";
+import { apiDb as db, companies, officialContacts, contactSources, propertyAliases } from "@workspace/db";
 import type { Company, OfficialContact, Evidence } from "@workspace/api-zod";
 import { evidenceFreshness, officialProvenance } from "./source-policy";
 export { evidenceFreshness } from "./source-policy";

@@ -1,4 +1,4 @@
-import { pool } from "@workspace/db";
+import { closeDatabasePools } from "@workspace/db";
 import { ZodError } from "zod";
 import { SourceReviewError } from "./source-review";
 import { historyUsage, listReviewHistory, parseHistoryArgs } from "./review-history";
@@ -15,4 +15,4 @@ main().catch((error: unknown) => {
     "History command failed; check database setup.";
   process.stderr.write(message + "\n");
   process.exitCode = 1;
-}).finally(() => pool.end());
+}).finally(closeDatabasePools);

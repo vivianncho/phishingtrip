@@ -159,8 +159,14 @@ API title `Api` and `GET /api/healthz → {"status":"ok"}` are unchanged.
 
 ## Read-only contact review history
 
+Database-enforced operator roles and secure provisioning are documented in
+[`docs/contact-review-database-access.md`](../../docs/contact-review-database-access.md).
+Provision access roles explicitly before running the API, review, or history
+commands; each uses a separate least-privilege database role and fails closed
+when that role is unavailable.
+
 Only trusted shell/database operators should run this maintenance command, using
-server-side database access (prefer a SELECT-only database role). It adds no HTTP
+the dedicated SELECT-only history identity described above. It adds no HTTP
 endpoint and is not available to anonymous app or extension clients.
 
 ```sh

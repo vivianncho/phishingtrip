@@ -1,5 +1,5 @@
 import { sql, desc, inArray } from "drizzle-orm";
-import { db, sourceReviewNotifications } from "@workspace/db";
+import { apiDb as db, sourceReviewNotifications } from "@workspace/db";
 import { newDeliveryId, type NotificationStore } from "./review-notifications";
 
 type Database = Pick<typeof db, "execute" | "select">;
