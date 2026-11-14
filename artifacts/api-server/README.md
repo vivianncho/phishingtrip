@@ -273,7 +273,7 @@ when that evidence conflicts or belongs to a different company. Use `outcome`,
 Errors never echo input, upstream messages, validation dumps, or stack traces.
 `GET /api/capabilities` probes directory availability, reports current metadata
 configuration/budget status, and always reports reputation unavailable.
-`available` metadata means configured and within local caps, not that a live
+`available` metadata means configured and within shared caps, not that a live
 request has succeeded. Per-check statuses additionally include `success`,
 `partial`, `timeout`, `invalid_response`, `unavailable`, `rate_limited`,
 `not_configured`, `disabled`, and `budget_exhausted`.
@@ -496,8 +496,10 @@ file. No credentials are needed for local normalization or directory matching.
 | --- | --- | --- |
 | `TWILIO_LOOKUP_ENABLED` | false | Only literal `true` enables |
 | `TWILIO_TIMEOUT_MS` | 2000 | 0–5000; minimum effective timeout 1 ms |
-| `TWILIO_MAX_REQUESTS` | 100 | 0–10000 per process lifetime; 0 prevents requests |
-| `TWILIO_REQUESTS_PER_MINUTE` | 10 | 0–100 per process; 0 prevents requests |
+| `TWILIO_MAX_REQUESTS` | 100 | 0–10000 per UTC day across all replicas; 0 prevents requests |
+| `TWILIO_REQUESTS_PER_MINUTE` | 10 | 0–100 across all replicas per fixed UTC minute; 0 prevents requests |
+| `TWILIO_MAX_SPEND_MICRO_USD` | 0 | 0–10000000 reserved micro-USD per UTC day; default prevents requests |
+| `TWILIO_REQUEST_COST_MICRO_USD` | 1000 | 1–1000000 micro-USD reserved per attempt, even for free Basic |
 | `API_RATE_LIMIT` | 60 | 0–300 requests/minute per client address |
 | `CORS_ORIGINS` | empty | Comma-separated exact HTTP(S) origins; no wildcard |
 | `TRUSTED_PROXY_CIDRS` | empty | Explicit trusted proxy IPs/CIDRs only |
@@ -518,10 +520,51 @@ on access and within the next one-second cleanup tick. Failure cooldowns last
 30 seconds with the same bound. Cache keys use a process-random HMAC rather
 than raw phone strings. Concurrent requests for the same number coalesce.
 No automatic retries. Attempted requests (including failures) count against
-the local caps. Cache hits do not. Caps reset at process restart; multiple
-replicas multiply these limits. They are request-count budgets, not a durable
-account-wide monetary guarantee. Before any multi-instance rollout or paid
-provider use, add an external account-wide limit and provider-side spend guard.
+shared daily request, minute request and daily spend-reservation ceilings.
+Cache hits do not. A transaction reserves all three before any upstream call;
+denial rolls back all three. Reservations are never refunded, including after
+timeouts, process crashes or uncertain upstream outcomes. Restarts, separate
+replicas and API-key rotations do not reset budgets. Same-number requests
+coalesce within a replica only; duplicate calls across replicas each reserve.
+
+One USD is 1000000 micro-USD. The default per-attempt reservation is a
+conservative $0.001 even though the documented Basic request is free.
+The zero daily spend allowance blocks opt-in requests until an operator
+explicitly approves an allowance. This does **not** authorize paid packages.
+If pricing changes, stop lookups until terms and the reservation amount have
+been reviewed. The reservation must be at least the maximum actual per-call
+charge. This is an application spend ceiling under that assumption, not a
+guarantee against provider billing changes, taxes or calls made outside this
+service. Set a provider-side hard spending guard before any paid integration.
+
+### Shared-counter operations
+
+Apply the `usage_counters` schema through the existing development schema
+push/post-merge setup before starting updated replicas. Apply the equivalent
+reviewed schema change to each target database before rollout; never reset or
+truncate active counters during deployment. No startup schema mutation occurs.
+All replicas and services using the same Twilio account **must use the same
+PostgreSQL database**, namespace and identical limit/cost configuration.
+There is one deliberately conservative `twilio-basic` budget for the whole
+database, independent of API credentials, including multiple keys/accounts.
+Other applications using that account must join this budget or be covered
+by the provider's account-wide guard.
+
+Atomic reservations use PostgreSQL transactions and namespace-scoped advisory
+locks. The database clock defines fixed UTC minute/day windows; process clocks
+do not reset or extend them. Each row has an explicit `expires_at`. Expired
+rows are ignored/deleted during checks and deleted by an unreferenced cleanup
+timer within the next 60 seconds while any API replica is running. With every
+replica stopped, expired rows remain inert until startup's first cleanup/check;
+an external database cleanup job is required for deletion while all replicas
+are stopped. Database backups/WAL can retain expired operational aggregates;
+apply the hosting retention policy accordingly.
+
+There is no in-memory counter fallback. Store errors block API requests with
+the existing safe 503 envelope; health remains available. A metadata-only
+counter failure reports `unavailable` and never calls Twilio or removes
+directory evidence. Capabilities checks read shared budgets without consuming
+them. They are a snapshot, not a reservation or a live provider probe.
 
 Basic validity is numbering-plan metadata, not evidence of ownership,
 reachability, a business relationship, reputation, or caller authentication.
@@ -531,7 +574,7 @@ and account logs are governed by its policies, not this app's in-memory TTL.
 ## Privacy, origins and operating limits
 
 Checks do not write the submitted number or any check result to PostgreSQL.
-Only curated companies, contacts and provenance persist. No accounts,
+Only curated companies, contacts, provenance and expiring aggregate abuse/budget counters persist. No accounts,
 check-history endpoint, browsing URLs, search history, page contents or public
 report storage. All API responses use `Cache-Control: no-store`.
 JSON bodies are limited to 2 KiB. App logs include method, request ID, response
@@ -547,11 +590,17 @@ Reverse-proxy headers are ignored by default. Do not use `trust proxy=true`,
 hop counts, or trust-all subnets. Configure only proxy addresses verified for
 the actual hosting topology. Until then, clients behind the shared proxy
 share its address-based rate bucket—conservative but potentially restrictive.
-IPv6 clients use the rate limiter's normalized subnet keys. Address buckets
-live only in memory for up to the current/previous minute and never enter logs.
-The API also has a 600-request/minute global process cap before per-address
-limiting to bound bucket growth. Health checks are exempt. All limits are per
-process; multiple replicas need a shared abuse-control layer before scale.
+IPv6 clients use normalized /56 subnet keys. Before storage, address keys are
+HMAC-SHA256 digests with a purpose prefix and server-only `SESSION_SECRET`.
+Raw IPs never enter the counter store or logs. All replicas must share the
+same stable secret; do not rotate it during an active minute window. Missing
+secret fails closed. Treat the short-lived digests as pseudonymous operational
+data, not anonymous analytics. No submitted number is used in shared counters.
+Address buckets expire at the next UTC minute boundary and are physically
+purged as described above. The API has a shared 600-request/minute global cap
+before per-address limiting, bounding new address rows to 600 per minute.
+Denied per-address requests still count against the global cap. Health and
+CORS preflight responses are exempt. No raw requests or check results persist.
 Database pool size and query/connect timeouts are bounded.
 
 This application cannot control hosting/proxy/provider log retention. Ensure

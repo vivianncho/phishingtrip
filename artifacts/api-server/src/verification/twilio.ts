@@ -1,11 +1,12 @@
 import { createHmac, randomBytes } from "node:crypto";
 import type { NumberMetadata, ProviderState } from "@workspace/api-zod";
 import { boundedInt, CACHE_MAX_ENTRIES, CACHE_TTL_SECONDS } from "./policy";
+import { lookupCounters, type Counters, type CounterRule } from "./counters";
 
 type Status = ProviderState["metadata"];
 export type LookupResult = { status: Status; metadata: NumberMetadata | null };
 export interface MetadataProvider {
-  status(): Status;
+  status(): Status | Promise<Status>;
   lookup(number: string): Promise<LookupResult>;
 }
 export interface LookupConfig {
@@ -15,6 +16,8 @@ export interface LookupConfig {
   timeoutMs: number;
   maxRequests: number;
   requestsPerMinute: number;
+  maxSpendMicroUsd?: number;
+  requestCostMicroUsd?: number;
 }
 export function lookupConfig(): LookupConfig {
   return {
@@ -24,6 +27,8 @@ export function lookupConfig(): LookupConfig {
     timeoutMs: boundedInt(process.env.TWILIO_TIMEOUT_MS, 2000, 5000),
     maxRequests: boundedInt(process.env.TWILIO_MAX_REQUESTS, 100, 10000),
     requestsPerMinute: boundedInt(process.env.TWILIO_REQUESTS_PER_MINUTE, 10, 100),
+    maxSpendMicroUsd: boundedInt(process.env.TWILIO_MAX_SPEND_MICRO_USD, 0, 10000000),
+    requestCostMicroUsd: boundedInt(process.env.TWILIO_REQUEST_COST_MICRO_USD, 1000, 1000000),
   };
 }
 
@@ -31,11 +36,11 @@ export class TwilioBasic implements MetadataProvider {
   private cache = new Map<string, { result: LookupResult; expires: number }>();
   private pending = new Map<string, Promise<LookupResult>>();
   private salt = randomBytes(32);
-  private requests = 0;
-  private windowStart = 0;
-  private windowRequests = 0;
   private cleanup: ReturnType<typeof setInterval>;
-  constructor(private config: LookupConfig, private request: typeof fetch = fetch, private now = Date.now) {
+  constructor(private config: LookupConfig, private request: typeof fetch = fetch, private now = Date.now, private counters: Counters = lookupCounters) {
+    if (!Number.isSafeInteger(config.requestCostMicroUsd ?? 1000) || (config.requestCostMicroUsd ?? 1000) < 1) {
+      throw new Error("Basic request cost reservation must be positive");
+    }
     // Purge expired values even when no further lookups arrive.
     this.cleanup = setInterval(() => this.purge(), 1000);
     this.cleanup.unref();
@@ -44,27 +49,43 @@ export class TwilioBasic implements MetadataProvider {
   private purge() {
     for (const [key, entry] of this.cache) if (entry.expires <= this.now()) this.cache.delete(key);
   }
-  status(): Status {
+  private configurationStatus(): Status {
     if (!this.config.enabled) return "disabled";
     if (!this.config.key || !/^SK[0-9a-fA-F]{32}$/.test(this.config.key) || !this.config.secret?.trim()) return "not_configured";
-    if (this.requests >= this.config.maxRequests) return "budget_exhausted";
-    if (this.now() - this.windowStart < 60000 && this.windowRequests >= this.config.requestsPerMinute) return "rate_limited";
     return "available";
   }
+  private rules(): CounterRule[] {
+    return [
+      { key: "daily-requests", limit: this.config.maxRequests, amount: 1, windowMs: 86400000 },
+      { key: "daily-spend", limit: this.config.maxSpendMicroUsd ?? 0, amount: this.config.requestCostMicroUsd ?? 1000, windowMs: 86400000 },
+      { key: "minute-requests", limit: this.config.requestsPerMinute, amount: 1, windowMs: 60000 },
+    ];
+  }
+  private async budget(reserve: boolean): Promise<Status> {
+    try {
+      const result = await this.counters.check(this.rules(), reserve);
+      return result.allowed ? "available" : result.deniedKey === "minute-requests" ? "rate_limited" : "budget_exhausted";
+    } catch { return "unavailable"; }
+  }
+  async status(): Promise<Status> {
+    const configured = this.configurationStatus();
+    return configured === "available" ? this.budget(false) : configured;
+  }
   async lookup(number: string): Promise<LookupResult> {
-    if (!this.config.enabled || !this.config.key || !this.config.secret || this.status() === "not_configured") return { status: this.status(), metadata: null };
+    const configured = this.configurationStatus();
+    if (configured !== "available") return { status: configured, metadata: null };
     this.purge();
     const key = createHmac("sha256", this.salt).update(number).digest("hex");
     const cached = this.cache.get(key);
     if (cached) return { ...cached.result, metadata: cached.result.metadata ? { ...cached.result.metadata, cached: true } : null };
     const pending = this.pending.get(key);
     if (pending) return pending;
-    const status = this.status();
-    if (status !== "available") return { status, metadata: null };
-    if (this.now() - this.windowStart >= 60000) { this.windowStart = this.now(); this.windowRequests = 0; }
-    this.requests++;
-    this.windowRequests++;
-    const promise = this.perform(number).then((result) => {
+    if (this.pending.size >= CACHE_MAX_ENTRIES) return { status: "rate_limited", metadata: null };
+    const promise = (async (): Promise<LookupResult> => {
+      // Never send upstream before the durable atomic reservation commits.
+      const status = await this.budget(true);
+      return status === "available" ? this.perform(number) : { status, metadata: null };
+    })().then((result) => {
       this.purge();
       if (this.cache.size >= CACHE_MAX_ENTRIES) this.cache.delete(this.cache.keys().next().value!);
       this.cache.set(key, { result, expires: this.now() + (result.metadata ? CACHE_TTL_SECONDS : 30) * 1000 });

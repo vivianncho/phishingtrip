@@ -22,7 +22,7 @@ import colors from '@/constants/colors';
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 // Native bundles need an absolute origin. Browser preview stays same-origin.
-setBaseUrl(Platform.OS !== 'web' && domain ? `https://${domain}` : null);
+setBaseUrl(Platform.OS === 'web' ? null : domain ? `https://${domain}` : null);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

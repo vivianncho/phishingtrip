@@ -19,7 +19,7 @@ export function verificationRouter(directory: Directory, provider: MetadataProvi
     let directoryStatus: "active" | "unavailable" = "active";
     try { await directory.list("", undefined, 1, 0); } catch { directoryStatus = "unavailable"; }
     res.json(GetCapabilitiesResponse.parse({
-      providers: { directory: directoryStatus, reputation: "unavailable", metadata: provider.status() },
+      providers: { directory: directoryStatus, reputation: "unavailable", metadata: await provider.status() },
       limitations, reputationReportsAvailable: false, sourceMaxAgeDays: SOURCE_MAX_AGE_DAYS,
       metadataCacheTtlSeconds: CACHE_TTL_SECONDS, metadataCacheMaxEntries: CACHE_MAX_ENTRIES,
       checkedAt: new Date().toISOString(),

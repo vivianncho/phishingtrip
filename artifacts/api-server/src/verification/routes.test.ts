@@ -11,12 +11,13 @@ import healthRouter from "../routes/health";
 import { verificationRouter } from "../routes/verification";
 import { directory, type Directory } from "./directory";
 import type { MetadataProvider } from "./twilio";
+import { counterFixture } from "./counter-fixture";
 
 const silent = pino({ level: "silent" });
 const disabled: MetadataProvider = { status: () => "disabled", lookup: async () => ({ status: "disabled", metadata: null }) };
 function appFor(d: Directory = directory, provider = disabled) {
   const router = Router().use(healthRouter).use(verificationRouter(d, provider));
-  return createApp({ router, logger: silent });
+  return createApp({ router, logger: silent, counters: counterFixture().store });
 }
 after(async () => { await pool.end(); });
 
@@ -271,7 +272,7 @@ test("provider failures and missing coverage do not erase directory evidence or 
 });
 test("rate limits ignore spoofed forwarded addresses and CORS only permits explicit origins", async () => {
   const router = Router().use(healthRouter).use(verificationRouter(directory, disabled));
-  const app = createApp({ router, logger: silent, rateMax: 2, origins: ["https://client.example"] });
+  const app = createApp({ router, logger: silent, rateMax: 2, origins: ["https://client.example"], counters: counterFixture().store });
   await request(app).get("/api/capabilities").set("X-Forwarded-For", "192.0.2.1").expect(200);
   await request(app).get("/api/capabilities").set("X-Forwarded-For", "192.0.2.2").expect(200);
   const limited = await request(app).get("/api/capabilities").set("X-Forwarded-For", "192.0.2.3").expect(429);
@@ -300,7 +301,7 @@ test("sensitive body, query, path, headers, parser errors and upstream errors ne
   const captured = pino({}, stream);
   const broken: Directory = { list: async () => { throw new Error("UPSTREAM_PRIVATE_TOKEN"); }, get: async () => null, matching: async () => [] };
   const router = Router().use(verificationRouter(broken, disabled));
-  const app = createApp({ router, logger: captured, rateMax: 20 });
+  const app = createApp({ router, logger: captured, rateMax: 20, counters: counterFixture().store });
   const headers = { Authorization: "Bearer PRIVATE_AUTH_TOKEN", Cookie: "PRIVATE_SESSION_COOKIE" };
   const malformed = await request(app).post("/api/checks?search=PRIVATE_SEARCH").set(headers).set("Content-Type", "application/json").send('{"phoneNumber":"+18002211212","page":"PRIVATE_PAGE"').expect(400);
   const failure = await request(app).get("/api/companies?search=PRIVATE_SEARCH").set(headers).expect(503);

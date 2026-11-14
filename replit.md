@@ -31,7 +31,7 @@ Travel phone-number evidence checker with a separate fish-companion design proto
 
 - `artifacts/api-server/README.md` — complete API/setup/privacy/provider/source-review documentation
 - `lib/api-spec/openapi.yaml` — API contract; regenerate shared helpers after changes
-- `lib/db/src/schema/` — persistent curated directory only
+- `lib/db/src/schema/` — curated directory and expiring aggregate operational counters
 - `artifacts/api-server/src/verification/` — normalization, evidence rules, provider adapter and seed
 - `artifacts/mockup-sandbox/` — independently developed design; not wired to live data
 - `extensions/stillwater/` — real browser-extension source and installation guide, independent from design mockups
