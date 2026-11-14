@@ -21,6 +21,13 @@ company/contact identity. No broad grants on future tables are made.
 
 ## Initial provisioning
 
+The app cannot load company choices, provider availability, or phone checks
+until the API role is provisioned. Schema setup alone does not create it.
+Run `pnpm --filter @workspace/db run access:check` to verify the restricted
+API's required permissions without changing access or reading private notes.
+Post-merge setup runs this read-only check and fails explicitly if access is
+missing or unsafe; it never grants permissions automatically.
+
 1. The trusted DBA creates/updates the ordinary Drizzle schema using the existing
    project process. Never run schema setup as an operator/API login.
 2. Review and explicitly run `lib/db/security/contact-review-roles.sql` as the

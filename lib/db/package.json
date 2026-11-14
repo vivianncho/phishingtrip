@@ -13,7 +13,8 @@
     "countries:upgrade": "tsx src/country-constraints-cli.ts upgrade",
     "push": "tsx src/push.ts",
     "push-force": "tsx src/push.ts --force",
-    "test": "tsx --test src/*.test.ts",
+    "test": "tsx --test src/*.test.ts && node --test security/*.test.mjs",
+    "access:check": "node security/check-api-access.mjs",
     "access:configure": "node security/configure-access.mjs"
   },
   "dependencies": {
