@@ -91,3 +91,13 @@ the number just checked from replacement suggestions, do not infer that a
 main line is a specialist department, and require an explicit confirmation
 before handing a number to the phone app. Keep free-form problem text local
 unless a future feature gets explicit consent to send it to another service.
+
+Keep a separate browser website alongside the native iPhone app.
+
+**Why:** The user explicitly approved adding a separate Phishing Trip website,
+not replacing or converting the Expo app.
+
+**How to apply:** Preserve the mobile app and all its previews. Keep the website
+on the same evidence service and Google request allowance, with consistent
+Hook responses and source limitations. Browser-saved trip contacts are local
+to that browser, not automatically synchronized with the iPhone app.

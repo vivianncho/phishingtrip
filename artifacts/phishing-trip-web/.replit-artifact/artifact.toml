@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/phishing-trip/"
+title = "Phishing Trip — Website"
+description = "Browser-based travel phone checks with Hook, official contact evidence, travel help, Google Places discovery, and locally saved trip contacts. A companion website that keeps the native iPhone app intact."
+version = "1.0.0"
+id = "artifacts/phishing-trip-web"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/phishing-trip/" ]
+localPort = 20727
+
+[services.development]
+run = "pnpm --filter @workspace/phishing-trip-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/phishing-trip-web", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/phishing-trip-web/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20727"
+BASE_PATH = "/phishing-trip/"
