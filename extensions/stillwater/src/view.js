@@ -82,3 +82,27 @@ export function showResult(root, result, selectedCompany, onCopy) {
   root.append(bullets(result.limitations));
   root.focus();
 }
+
+export function showPlaces(root, result) {
+  root.replaceChildren();
+  const attribution = element("img");
+  attribution.src = "images/google-maps-attribution.png";
+  attribution.alt = "Google Maps"; attribution.width = 120;
+  root.append(attribution, element("p", "Google Maps listings · not independently verified", "muted"));
+  if (!result.items.length) root.append(element("p", "No listings found. Try the business's official website."));
+  for (const place of result.items) {
+    const entry = element("article");
+    entry.append(element("h3", place.name), element("p", place.address));
+    if (place.phone) entry.append(element("p", place.phone, "number"));
+    if (place.website) entry.append(link("Review the listed website", place.website));
+    if (place.mapsUrl) {
+      const line = element("p"); line.append(link("View listing on Google Maps", place.mapsUrl)); entry.append(line);
+    }
+    for (const source of place.attributions) {
+      const line = element("p", undefined, "muted");
+      line.append(source.uri ? link(source.name, source.uri) : element("span", source.name)); entry.append(line);
+    }
+    root.append(entry);
+  }
+  root.append(element("p", "A listing may be outdated or wrong. Confirm the number on the company's own site or booking confirmation. Business searches never change Hook's evidence result.", "muted"));
+}

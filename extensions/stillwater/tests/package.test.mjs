@@ -31,7 +31,7 @@ test("both real extension packages build without background crawling or preconfi
     assert.deepEqual([...country.matchAll(/value="([^"]*)"/g)].map(m => m[1]), ["", "US", "MX", "CA"]);
     assert.ok(!/<(?:script|link|image|img)\b[^>]*(?:src|href)="https?:/i.test(html),
       "popup artwork, styles and scripts are local");
-    assert.equal(await readFile(path.join(dir, "settings.js"), "utf8"), 'export const DEFAULT_API_ORIGIN = "";\n');
+    assert.equal(await readFile(path.join(dir, "settings.js"), "utf8"), 'export const DEFAULT_API_ORIGIN = "";\nexport const MANAGED_SERVICE = false;\n');
     for (const file of ["popup.js", "core.js", "view.js", "inline.js", "scan.js"]) {
       execFileSync(process.execPath, ["--check", path.join(dir, file)]);
     }

@@ -1,5 +1,22 @@
 # Install Phishing Trip
 
+## For travelers, after store publication
+
+Visit the website's **Get extension** page and follow the official store link
+for your browser. Your browser must confirm installation; a website cannot
+silently install it. On iPhone, install the Safari-containing app and enable
+Phishing Trip in Safari's **Manage Extensions**.
+
+The consumer release has its checking service built in. No Google API key or
+backend address is needed. To use Hook, open the extension on a webpage and
+choose **Turn on for this page**, select one number, tap Hook and review your
+country/company before confirming the check.
+
+The store listings and public checking service are not published by these
+instructions. Until they are available, the website shows **Not published yet**.
+The ZIP packages described below are development/testing packages, not the
+one-click customer install.
+
 These are real extension files, not the design mockup. They are an initial
 developer build, **not store-approved or tested on an iPhone yet**. The browser
 extension does not need to be added inside the Expo app to work.

@@ -128,6 +128,11 @@ details button { margin-top: 9px; width: 100%; }
 #result ul { padding-left: 18px; }
 #result li { margin: 12px 0; color: #d0e2db; font-size: 12px; }
 #result button { margin: 6px 0; }
+#places { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+#places-search { width: 100%; margin-top: 8px; }
+#places-results article { padding: 12px 0; border-bottom: 1px solid var(--line); }
+#places-results img { width: 120px; height: auto; display: block; margin-top: 12px; }
+#places-results a { color: var(--accent); overflow-wrap: anywhere; }
 #result details { font-size: 12px; }
 footer { border-top: 1px solid #b9dbc42e; color: #a1bebc; font-size: 10px; line-height: 1.75; padding-top: 14px; margin-top: 20px; }
 a { color: var(--accent); }

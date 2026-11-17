@@ -3,15 +3,20 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { apiOrigin } from "../src/core.js";
+import { verifyReleaseService } from "./release-service.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workspace = path.resolve(root, "../..");
-const output = path.join(workspace, "generated-artifacts/stillwater-extension");
 const args = process.argv.slice(2);
-if (args.length && (args.length !== 2 || args[0] !== "--api-origin")) {
-  throw new Error("Usage: node extensions/stillwater/scripts/build.mjs [--api-origin https://published-backend.example]");
+const release = args.includes("--release");
+const options = args.filter(arg => arg !== "--release");
+if ((options.length && (options.length !== 2 || options[0] !== "--api-origin")) || args.filter(arg => arg === "--release").length > 1) {
+  throw new Error("Usage: node extensions/stillwater/scripts/build.mjs [--release] [--api-origin https://published-backend.example]");
 }
-const origin = args.length ? apiOrigin(args[1]) : "";
+const config = JSON.parse(await readFile(path.join(root, "release.json"), "utf8"));
+const candidate = options.length ? options[1] : release ? config.apiOrigin : "";
+const origin = release ? await verifyReleaseService(candidate) : candidate ? apiOrigin(candidate) : "";
+const output = path.join(workspace, "generated-artifacts/stillwater-extension", ...(release ? ["release"] : []));
 const manifest = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8"));
 
 await mkdir(output, { recursive: true });
@@ -20,8 +25,13 @@ for (const browser of ["chromium", "safari"]) {
   await rm(target, { recursive: true, force: true });
   await mkdir(path.join(target, "icons"), { recursive: true });
   for (const file of await readdir(path.join(root, "src"))) await cp(path.join(root, "src", file), path.join(target, file), { recursive: true });
-  await writeFile(path.join(target, "settings.js"), `export const DEFAULT_API_ORIGIN = ${JSON.stringify(origin)};\n`);
+  await cp(path.join(workspace, "artifacts/phishing-trip-web/public/images/google-maps-attribution.png"), path.join(target, "images/google-maps-attribution.png"));
+  await writeFile(path.join(target, "settings.js"), `export const DEFAULT_API_ORIGIN = ${JSON.stringify(origin)};\nexport const MANAGED_SERVICE = ${release};\n`);
   const browserManifest = { ...manifest, ...(browser === "chromium" ? { minimum_chrome_version: "102" } : {}) };
+  if (release) {
+    browserManifest.host_permissions = [`${origin}/*`];
+    delete browserManifest.optional_host_permissions;
+  }
   await writeFile(path.join(target, "manifest.json"), JSON.stringify(browserManifest, null, 2) + "\n");
   // Zip contents, not the enclosing folder: usable by store upload and Apple's packager.
   const archive = path.join(output, `${browser}.zip`);
@@ -34,4 +44,4 @@ for (const browser of ["chromium", "safari"]) {
 }
 await cp(path.join(root, "INSTALL.md"), path.join(output, "INSTALL.md"));
 console.log("Built Chrome/Edge and Safari extension folders and ZIPs in generated-artifacts/stillwater-extension.");
-console.log(origin ? `Default evidence origin: ${origin}` : "No backend is preconfigured. Install, open Setup, and allow your published HTTPS evidence service.");
+console.log(release ? `Consumer release: ${origin}; no manual service setup or API keys required.` : "Development packages only. Use --release for a public, preconfigured consumer package. No visibility or store publishing changes were made.");

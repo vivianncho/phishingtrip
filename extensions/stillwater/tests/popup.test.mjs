@@ -67,6 +67,30 @@ test("popup requires consent, uploads no browsing text, clears stale verdicts an
   assert.match($("error").textContent, /unavailable/);
   assert.equal($("check").disabled, false, "failure permits retry");
 
+  globalThis.fetch = async (_url, options) => {
+    requests.push({ url: _url, options });
+    if (_url.endsWith("/places/search")) return Response.json({
+      checkedAt: new Date().toISOString(),
+      items: [{ id: "hotel", name: "Fictional Hotel", address: "Cancun", phone: "+529985550146",
+        website: "https://hotel.example", attributions: [{ name: "Listing provider", uri: "https://provider.example" }] }],
+    });
+    return Response.json(result({ outcome: "not_verified", label: "Not verified", reason: "NO_EVIDENCE", evidence: [], freshness: "unknown" }));
+  };
+  $("consent").checked = true;
+  await $("check-form").fire("submit");
+  assert.equal($("places").hidden, false);
+  assert.equal($("hook").dataset.state, "not_verified");
+  const beforePlaces = requests.length;
+  $("places-query").value = "Fictional Hotel Cancun"; await $("places-query").fire("input");
+  assert.equal(requests.length, beforePlaces, "typing a Google search does not send it");
+  await $("places-form").fire("submit");
+  assert.equal(requests.length, beforePlaces + 1);
+  assert.deepEqual(JSON.parse(requests.at(-1).options.body), { query: "Fictional Hotel Cancun" });
+  assert.equal($("hook").dataset.state, "not_verified", "Google listings never promote an unverified number to green");
+  assert.ok($("places-results").children.some(n => n.alt === "Google Maps"), "local Google attribution is shown");
+  $("places-query").value = "Another hotel"; await $("places-query").fire("input");
+  assert.equal($("places-results").children.length, 0, "editing search clears stale listings");
+
   let release;
   globalThis.fetch = async () => new Promise(resolve => { release = resolve; });
   $("consent").checked = true;
@@ -90,6 +114,44 @@ test("popup requires consent, uploads no browsing text, clears stale verdicts an
   assert.deepEqual(removals, ["apiOrigin"]);
   assert.equal($("phone").value, "");
   assert.match($("destination").textContent, /No evidence service/);
+});
+
+test("Hook accepts only a matching native port from our top-frame script, never a web page or foreign extension", async () => {
+  const dom = documentMock(), handlers = new Map(), messages = [];
+  globalThis.document = dom;
+  globalThis.Option = class extends FakeNode {};
+  globalThis.location = { hash: "#mode=inline&channel=secret-test-token&number=%2B18002211212", pathname: "/popup.html" };
+  globalThis.history = { replaceState() {} };
+  globalThis.window = { addEventListener: (name, fn) => handlers.set(name, fn) };
+  globalThis.browser = {
+    runtime: { id: "fixture", onConnect: { addListener: fn => handlers.set("native-connect", fn) } },
+    permissions: { contains: async () => true, onRemoved: { addListener() {} } },
+    storage: { local: { get: async () => ({ apiOrigin: "https://backend.example" }) } },
+  };
+  globalThis.fetch = async () => Response.json(result());
+  await import("../src/popup.js?bridge-test");
+  await new Promise(resolve => setImmediate(resolve));
+  const $ = id => dom.getElementById(id);
+  const handshake = overrides => handlers.get("native-connect")({
+    name: "phishing-trip-hook-secret-test-token", sender: { id: "fixture", tab: { id: 1 }, frameId: 0 },
+    postMessage: msg => messages.push(msg), onDisconnect: { addListener() {} }, disconnect() {},
+    ...overrides,
+  });
+  assert.equal(handlers.has("message"), false, "no web-page message handshake exists");
+  handshake({ name: "wrong-token" });
+  handshake({ sender: { id: "foreign-extension", tab: { id: 1 }, frameId: 0 } });
+  handshake({ sender: { id: "fixture", frameId: 0 } });
+  handshake({ sender: { id: "fixture", tab: { id: 1 }, frameId: 2 } });
+  assert.equal(messages.length, 0);
+  handshake({ state: "official_match" });
+  assert.equal(messages[0].state, "idle", "parent cannot supply a result in its handshake");
+  $("country").value = "US"; $("consent").checked = true;
+  await $("check-form").fire("submit");
+  assert.deepEqual(messages.slice(-2).map(m => m.state), ["searching", "official_match"]);
+  assert.equal(messages.at(-1).number, "+18002211212");
+  $("phone").value = "+12025550146"; await $("phone").fire("input");
+  assert.equal(messages.at(-1).state, "idle", "edited input clears the on-page glow");
+  delete globalThis.window;
 });
 
 test("evidence and alternatives render as text with source links, not HTML or dial links", () => {

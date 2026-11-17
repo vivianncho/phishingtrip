@@ -1,6 +1,6 @@
-import { apiOrigin, phoneCandidate, checkBody, companyPage, checkResult, capabilities, apiRequest, CATEGORIES } from "./core.js";
-import { showResult } from "./view.js";
-import { DEFAULT_API_ORIGIN } from "./settings.js";
+import { apiOrigin, phoneCandidate, checkBody, companyPage, checkResult, capabilities, apiRequest, placeSearchBody, placesResult, CATEGORIES } from "./core.js";
+import { showResult, showPlaces } from "./view.js";
+import { DEFAULT_API_ORIGIN, MANAGED_SERVICE } from "./settings.js";
 
 const api = globalThis.browser || globalThis.chrome;
 const $ = id => document.getElementById(id);
@@ -8,12 +8,37 @@ const initialParams = new URLSearchParams(location.hash.slice(1));
 if (initialParams.get("mode") === "inline" && document.body) document.body.dataset.mode = "inline";
 let origin = "", companies = [], nextOffset = null, directoryFilter = "", busy = false, companyBusy = false;
 let checkedRevision = 0;
+let placesRevision = 0;
+let placesBusy = false;
+let resultPort = null;
+function notifyHook(state) {
+  try { resultPort?.postMessage({ type: "phishing-trip-state", state, number: $("phone").value }); }
+  catch { resultPort = null; } // The helper was closed; keep the evidence panel usable.
+}
+// A web page can embed a web-accessible extension resource and choose its
+// fragment. A token alone cannot authenticate that page. Only browser-native
+// connections from our own top-frame content script receive result messages.
+if (initialParams.get("mode") === "inline" && initialParams.get("channel")) {
+  api?.runtime?.onConnect?.addListener(port => {
+    if (resultPort || port.name !== `phishing-trip-hook-${initialParams.get("channel")}` ||
+        port.sender?.id !== api.runtime.id || !Number.isInteger(port.sender?.tab?.id) ||
+        port.sender.frameId !== 0) return;
+    resultPort = port;
+    port.onDisconnect.addListener(() => { if (resultPort === port) resultPort = null; });
+    notifyHook($("hook").dataset.state);
+  });
+  globalThis.window?.addEventListener("pagehide", () => { resultPort?.disconnect(); resultPort = null; });
+}
 function status(id, message) { $(id).textContent = message; }
 function setup(open) { $("setup").hidden = !open; $("settings-toggle").setAttribute("aria-expanded", String(open)); }
 function resetResult() {
   checkedRevision++;
+  placesRevision++;
+  $("places").hidden = true; $("places-query").value = "";
+  $("places-results").replaceChildren(); status("places-status", "");
   $("result").replaceChildren(); $("result").hidden = true; $("consent").checked = false;
   $("hook").dataset.state = "idle"; status("hook-caption", "Hook is here with you.");
+  notifyHook("idle");
   status("selection-summary", `Number: ${$("phone").value || "choose one"}. Country: ${$("country").value.toUpperCase() || "choose one"}. Company: ${selectedCompany()?.name || "none — number-only check"}.`);
 }
 function busyState(value) {
@@ -22,9 +47,9 @@ function busyState(value) {
   $("check").textContent = value ? "Checking the evidence…" : "Check this number";
 }
 async function permission() {
-  if (!origin) throw new Error("Connect a published evidence service in Setup first.");
+  if (!origin) throw new Error(MANAGED_SERVICE ? "Checking is not configured in this build. Use the Phishing Trip website instead." : "Connect a published evidence service in Setup first.");
   const allowed = await api.permissions.contains({ origins: [`${origin}/*`] });
-  if (!allowed) throw new Error("Allow access to your evidence service in Setup first.");
+  if (!allowed) throw new Error(MANAGED_SERVICE ? "Allow Phishing Trip access to its checking service in your browser's extension settings. No API address or key is needed." : "Allow access to your evidence service in Setup first.");
 }
 function selectedCompany() { return companies.find(c => c.id === $("company").value); }
 function selected(number) {
@@ -157,6 +182,7 @@ for (const id of ["category", "company-search"]) $(id).addEventListener("input",
 $("check-form").addEventListener("submit", async event => {
   event.preventDefault();
   if (busy || companyBusy) return;
+  placesRevision++; $("places").hidden = true; $("places-results").replaceChildren();
   status("error", "");
   try {
     if (!$("consent").checked) throw new Error("Confirm the selected number can be sent before checking.");
@@ -169,26 +195,57 @@ $("check-form").addEventListener("submit", async event => {
     if (revision !== checkedRevision) return;
     $("result").replaceChildren(); $("result").hidden = true;
     $("hook").dataset.state = "searching"; status("hook-caption", "Hook is checking the evidence.");
+    notifyHook("searching");
     const result = checkResult(await apiRequest(origin, "/checks", { body }), body);
     await permission();
     if (revision !== checkedRevision) return;
     $("hook").dataset.state = result.outcome;
+    notifyHook(result.outcome);
     status("hook-caption", result.outcome === "official_match" ? "A listed contact, not a guarantee. Take your time." : result.outcome === "reports_found" ? "Pause. Hook found reports worth reviewing." : "Red means pause—not proof of a scam.");
     showResult($("result"), result, company, async number => {
       try { await navigator.clipboard.writeText(number); status("error", "Listed number copied. Review the official source before calling."); }
       catch { status("error", `Copy is unavailable here. Select and copy this listed number: ${number}`); }
     });
+    $("places").hidden = result.outcome === "official_match";
+    $("places-query").value = company?.name || "";
   } catch (error) {
     $("result").replaceChildren(); $("result").hidden = true;
     $("hook").dataset.state = "error"; status("hook-caption", "No check completed. You can try another way.");
+    notifyHook("error");
     status("error", error.message || "The check failed. No number was verified.");
   } finally { $("consent").checked = false; busyState(false); }
+});
+
+$("places-query").addEventListener("input", () => {
+  placesRevision++; $("places-results").replaceChildren(); status("places-status", "");
+});
+$("places-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (placesBusy) return;
+  const revision = ++placesRevision;
+  const service = origin;
+  try {
+    const body = placeSearchBody($("places-query").value);
+    placesBusy = true; $("places-search").disabled = true;
+    await permission();
+    if (revision !== placesRevision) return;
+    $("places-results").replaceChildren(); status("places-status", "Searching business listings…");
+    const result = placesResult(await apiRequest(service, "/places/search", { body }));
+    await permission();
+    if (revision !== placesRevision || origin !== service) return;
+    showPlaces($("places-results"), result);
+    status("places-status", `Listings retrieved ${new Date(result.checkedAt).toLocaleString()}. Not a safety verdict.`);
+  } catch (error) {
+    if (revision !== placesRevision) return;
+    $("places-results").replaceChildren();
+    status("places-status", error.message || "Business search is unavailable. No number was verified.");
+  } finally { placesBusy = false; $("places-search").disabled = false; }
 });
 
 api?.permissions?.onRemoved?.addListener(() => {
   resetResult();
   status("availability-status", "Permissions changed. Provider availability must be requested again.");
-  status("error", "Browser access was revoked. Reconnect in Setup before checking.");
+  status("error", MANAGED_SERVICE ? "Browser access was revoked. Manage Phishing Trip permissions in your browser's extension settings." : "Browser access was revoked. Reconnect in Setup before checking.");
 });
 
 async function init() {
@@ -199,10 +256,19 @@ async function init() {
   try {
     // The only stored field is configuration. No numbers, results or history.
     const saved = await api.storage.local.get("apiOrigin");
-    origin = saved.apiOrigin ? apiOrigin(saved.apiOrigin) : DEFAULT_API_ORIGIN ? apiOrigin(DEFAULT_API_ORIGIN) : "";
+    origin = MANAGED_SERVICE ? apiOrigin(DEFAULT_API_ORIGIN) : saved.apiOrigin ? apiOrigin(saved.apiOrigin) : DEFAULT_API_ORIGIN ? apiOrigin(DEFAULT_API_ORIGIN) : "";
     $("api-origin").value = origin;
-    status("destination", origin ? `Selected checks go to ${origin}.` : "No evidence service connected. Open Setup to begin.");
-    if (!origin || !(await api.permissions.contains({ origins: [`${origin}/*`] }))) setup(true);
+    status("destination", origin ? `Selected checks go to ${origin}.` : "Development build: no service is configured. Public release will not require setup.");
+    if (MANAGED_SERVICE) {
+      $("setup-form").hidden = true;
+      $("disconnect").hidden = true;
+      $("settings-toggle").textContent = "Privacy";
+      status("setup-heading", "Your choice. Your number.");
+      status("setup-description", "Phishing Trip handles the connection. No API key or service address is needed. Only confirmed checks are sent. Manage or revoke access in your browser's extension settings.");
+      if (!(await api.permissions.contains({ origins: [`${origin}/*`] }))) {
+        status("error", "Allow Phishing Trip access to its checking service in your browser's extension settings.");
+      }
+    } else if (!origin || !(await api.permissions.contains({ origins: [`${origin}/*`] }))) setup(true);
     const initial = initialParams.get("number");
     if (phoneCandidate(initial)) selected(initial);
     // Do not retain the selected number in extension history / address bar.

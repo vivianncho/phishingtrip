@@ -12,7 +12,7 @@
   <main>
     <section id="setup" hidden aria-labelledby="setup-heading">
       <h2 id="setup-heading">Connect your evidence service</h2>
-      <p>Use the public HTTPS address of your Phishing Trip backend. Only connect to a service you trust with a selected number.</p>
+      <p id="setup-description">Development package: use your public HTTPS backend address. The public release handles this connection for travelers.</p>
       <form id="setup-form">
         <label for="api-origin">Backend address</label>
         <input id="api-origin" type="url" placeholder="https://your-published-backend.example" autocomplete="off" required>
@@ -84,6 +84,18 @@
         <p id="error" class="error" role="alert"></p>
       </form>
       <section id="result" hidden aria-live="polite" aria-atomic="true" tabindex="-1"></section>
+      <section id="places" hidden aria-labelledby="places-heading">
+        <h2 id="places-heading">Find another contact</h2>
+        <p class="muted">Search travel businesses with Google Maps. These are listings, not verified contacts or spam verdicts.</p>
+        <form id="places-form">
+          <label for="places-query">Business name and city</label>
+          <input id="places-query" type="search" minlength="3" maxlength="120" placeholder="Hotel name, Cancun" autocomplete="off" required>
+          <p class="muted">Only the search you type is sent to Phishing Trip, then Google, when you choose Search. Leave out booking details. Shared allowance: 10 Google requests daily.</p>
+          <button id="places-search" type="submit">Search Google Maps</button>
+        </form>
+        <p id="places-status" class="muted" role="status"></p>
+        <div id="places-results" aria-live="polite"></div>
+      </section>
     </section>
     <footer>Not a guarantee of safety. Caller ID can be spoofed. Unknown does not mean scam. No number-check history, page URLs, or browsing text is saved by this extension.</footer>
   </main>

@@ -8,6 +8,7 @@ import CheckPage, { type Prefill } from '@/pages/CheckPage';
 import DirectoryPage from '@/pages/DirectoryPage';
 import TripsPage from '@/pages/TripsPage';
 import HelpPage from '@/pages/HelpPage';
+import ExtensionPage from '@/pages/ExtensionPage';
 import NotFound from '@/pages/not-found';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
@@ -35,9 +36,10 @@ function BrowserApp() {
         <Route path="/directory"><DirectoryPage onUse={onUse} /></Route>
         <Route path="/trips"><TripsPage onUse={onUse} /></Route>
         <Route path="/help" component={HelpPage} />
+        <Route path="/extension" component={ExtensionPage} />
         <Route component={NotFound} />
       </Switch></ErrorBoundary>
-    </main><footer className="footer"><div><em>A little clarity. A calmer journey.</em><br />Evidence is not a guarantee. Caller ID can be spoofed.</div><Link href="/help" data-testid="link-footer-privacy">Privacy & limitations<ArrowMark /></Link></footer>
+    </main><footer className="footer"><div><em>A little clarity. A calmer journey.</em><br />Evidence is not a guarantee. Caller ID can be spoofed.</div><div className="extension-footer-links"><Link href="/extension" aria-current={location === '/extension' ? 'page' : undefined} data-testid="link-get-extension">Get extension<ArrowMark /></Link><Link href="/help" data-testid="link-footer-privacy">Privacy & limitations<ArrowMark /></Link></div></footer>
   </div></div>;
 }
 function ArrowMark() { return <span aria-hidden="true" style={{ marginLeft: 6 }}>↗</span>; }

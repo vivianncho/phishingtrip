@@ -41,6 +41,25 @@ export function safeHttps(value) {
   } catch { return null; }
 }
 
+export function placeSearchBody(value) {
+  if (typeof value !== "string" || value.trim().length < 3 || value.trim().length > 120 || /[\u0000-\u001f\u007f]/.test(value)) {
+    throw new Error("Enter a business name and city using 3–120 characters. Do not include booking details.");
+  }
+  return { query: value.trim() };
+}
+
+export function placesResult(value) {
+  if (!value || !Number.isFinite(Date.parse(value.checkedAt)) ||
+      !list(value.items, p => p && text(p.id, 512) && text(p.name, 500) && text(p.address, 1000) &&
+        (p.phone === undefined || text(p.phone, 64)) &&
+        (p.website === undefined || !!safeHttps(p.website)) &&
+        (p.mapsUrl === undefined || !!safeHttps(p.mapsUrl)) &&
+        list(p.attributions, a => a && text(a.name, 500) && (a.uri === undefined || !!safeHttps(a.uri))), 8)) {
+    throw new Error("The business listings could not be read. No number was verified.");
+  }
+  return value;
+}
+
 function text(v, max = 2000) { return typeof v === "string" && v.length <= max; }
 function list(v, predicate, max = 100) { return Array.isArray(v) && v.length <= max && v.every(predicate); }
 function evidence(e) {
@@ -129,12 +148,15 @@ export function checkResult(value, body) {
 
 export async function apiRequest(origin, path, { body, fetcher = fetch, timeout = 12000 } = {}) {
   const base = apiOrigin(origin);
-  if (!/^\/(?:checks|capabilities|companies(?:\?[^#]*)?)$/.test(path)) throw new Error("Unsupported API operation.");
+  if (!/^\/(?:checks|capabilities|places\/search|companies(?:\?[^#]*)?)$/.test(path)) throw new Error("Unsupported API operation.");
   if (body) {
-    if (path !== "/checks" || Object.keys(body).some(key => !["phoneNumber", "defaultCountry", "claimedCompanyId"].includes(key))) {
+    if (path === "/places/search" && Object.keys(body).every(key => key === "query")) {
+      body = placeSearchBody(body.query);
+    } else if (path === "/checks" && Object.keys(body).every(key => ["phoneNumber", "defaultCountry", "claimedCompanyId"].includes(key))) {
+      body = checkBody(body.phoneNumber, body.defaultCountry ?? "", body.claimedCompanyId);
+    } else {
       throw new Error("Only selected check fields can be sent.");
     }
-    body = checkBody(body.phoneNumber, body.defaultCountry ?? "", body.claimedCompanyId);
   }
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
@@ -147,7 +169,7 @@ export async function apiRequest(origin, path, { body, fetcher = fetch, timeout 
       redirect: "error", signal: abort.signal,
     });
     if (!response.ok) {
-      if (response.status === 429) throw new Error("A few too many checks. Wait a moment, then try again.");
+      if (response.status === 429) throw new Error(path === "/places/search" ? "Business search is limited right now. The shared Google allowance is 10 requests daily. Try the company's official website." : "A few too many checks. Wait a moment, then try again.");
       if (response.status === 400) throw new Error("Check the complete number and country, then try again.");
       if (response.status === 404) throw new Error("That company is no longer listed. Reload the directory.");
       throw new Error("The evidence service is unavailable. No number was verified.");
