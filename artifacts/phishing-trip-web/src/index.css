@@ -19,3 +19,12 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .fish-green .fish-lantern,.fish-red .fish-lantern{filter:none;opacity:1}
 html[data-hidden=true] *{animation-play-state:paused!important}
+/* Keep navigation in the document flow on small screens: an overlay must
+   never intercept a tap intended for a form control underneath it. */
+@media(max-width:767px){
+ .header{height:auto;min-height:92px;padding:20px 0 12px;flex-wrap:wrap;gap:16px}
+ .nav{position:static;inset:auto;width:100%;z-index:auto;backdrop-filter:none;background:transparent;border-top:0;padding:0;justify-content:space-between}
+ .nav a{min-height:48px;flex:1;padding:8px 10px}
+ .footer{padding-bottom:30px}
+ input,select,textarea{scroll-margin-block:24px}
+}

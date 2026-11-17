@@ -101,3 +101,13 @@ not replacing or converting the Expo app.
 on the same evidence service and Google request allowance, with consistent
 Hook responses and source limitations. Browser-saved trip contacts are local
 to that browser, not automatically synchronized with the iPhone app.
+
+In the website, preserve unfinished Check fields in memory across document
+visibility changes, but still discard pending requests and evidence results.
+
+**Why:** Clearing the whole form when the document hides loses travelers'
+unfinished entries while they switch browser tabs or apps. This is different
+from persisting a phone-check history.
+
+**How to apply:** Keep drafts out of storage and URLs; discard on route leave
+or reload. Do not use a background-privacy cleanup to reset a form mid-entry.

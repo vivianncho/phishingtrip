@@ -29,7 +29,9 @@ export default function CheckPage({ prefill, consumePrefill, onUse }: { prefill:
     if (prefill) { reset({ number: prefill.number, country: prefill.number.startsWith('+') ? 'international' : '', company: prefill.company, service: '' }); request.clear(); setValidation(''); consume.current(); setFocus('number'); }
   }, [prefill, reset, setFocus, request.clear]);
   useEffect(() => {
-    const hide = () => { if (document.hidden) { reset({ number: '', country: '', company: '', service: '' }); setCompanySearch(''); setValidation(''); } };
+    // Keep the unfinished form in memory when a browser picker or another tab
+    // takes focus. Results and pending requests still clear on document hide.
+    const hide = () => { if (document.hidden) { setCompanySearch(''); setValidation(''); } };
     document.addEventListener('visibilitychange', hide);
     return () => document.removeEventListener('visibilitychange', hide);
   }, [reset]);
