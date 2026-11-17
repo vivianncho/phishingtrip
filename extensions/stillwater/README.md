@@ -35,7 +35,9 @@ with a workspace preview domain.
   text uploads. Candidates can include false positives; selection is required.
 - `src/selection.js`: selection-only capture; no DOM scan, URLs or network.
 - `src/inline.js`: per-document opt-in number helper and `tel:` interception,
-  extension-origin iframe for review/consent. No message proxy or remote fetch.
+  right-hand extension-origin panel for review/consent. Activation opens the
+  local panel without a request; highlighting a number does not submit it.
+  No message proxy or remote fetch.
 - `src/popup.js`: consent-first controller; only API-origin settings persist.
 - `src/view.js`: source/evidence/alternative rendering using `textContent`.
 - `src/images/`: local reference Hook SVG layers; assembled at the canvas coordinates in the popup, with no remote artwork requests.

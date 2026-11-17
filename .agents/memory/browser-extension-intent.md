@@ -9,6 +9,16 @@ Build both Chrome/Edge and iPhone Safari versions, not only a simulated browser 
 
 **How to apply:** Keep number extraction local, require a deliberate check, and upload only the selected number, explicit country, and optional claimed company. Search placement and AI prose are not ownership or scam evidence. Never report untested Safari resources as installed or signed.
 
+Use a right-hand companion panel beside search results, with the same approved
+lantern-fish Hook as the app rather than the round cartoon in the reference.
+
+**Why:** The user provided a search-results/sidebar reference and explicitly
+asked to retain their chosen fish design.
+
+**How to apply:** Make per-page activation explicit; preserve selected-number
+consent before transmission. Do not imply a website can install the extension
+or that the illustrated search engine is the real verification service.
+
 Apple now documents a browser-based Safari Web Extension Packager in App Store Connect, alongside the Mac/Xcode tool.
 
 **Why:** Current official Apple documentation checked on 2026-11-14 expressly supports packaging without a Mac. Older guidance that a Mac is always required is too strong.

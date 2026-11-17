@@ -29,6 +29,10 @@ export function showResult(root, result, selectedCompany, onCopy) {
     element("p", selectedCompany ? `Checked against ${selectedCompany.name}` : "No company selected. A listing match does not confirm the company you intended."),
     element("p", result.explanation),
     element("p", `Checked ${new Date(result.checkedAt).toLocaleString()}`, "muted"));
+  if (result.outcome === "not_verified") {
+    root.append(element("strong", "Pause before calling.", "unverified-warning"),
+      element("p", "Red means pause—not proof of a scam. Use your booking confirmation or the company's official website."));
+  }
   const provider = result.providers;
   root.append(element("p", `Directory: ${provider.directory}. Reports: ${provider.reputation}. Number metadata: ${provider.metadata}.`, "muted"));
   if (result.metadata) {

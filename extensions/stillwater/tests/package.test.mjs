@@ -25,6 +25,10 @@ test("both real extension packages build without background crawling or preconfi
     assert.ok(html.includes('type="module" src="popup.js"'));
     assert.ok(html.includes('aria-label="Hook, your fish companion"'));
     assert.ok(html.includes('id="hook-caption"'));
+    assert.doesNotMatch(html, /fish-eye-rest/, "Hook stays awake for an official match");
+    const country = html.match(/<select id="country"[^>]*>([\s\S]*?)<\/select>/)?.[1];
+    assert.ok(country, "country is an explicit picker");
+    assert.deepEqual([...country.matchAll(/value="([^"]*)"/g)].map(m => m[1]), ["", "US", "MX", "CA"]);
     assert.ok(!/<(?:script|link|image|img)\b[^>]*(?:src|href)="https?:/i.test(html),
       "popup artwork, styles and scripts are local");
     assert.equal(await readFile(path.join(dir, "settings.js"), "utf8"), 'export const DEFAULT_API_ORIGIN = "";\n');
@@ -53,6 +57,9 @@ test("both real extension packages build without background crawling or preconfi
     const css = await readFile(path.join(dir, "popup.css"), "utf8");
     assert.match(css, /prefers-reduced-motion:\s*reduce/);
     assert.match(css, /:focus-visible/);
+    assert.match(css, /--lantern-color:\s*#38c85b/);
+    assert.match(css, /--lantern-color:\s*#e53e46/);
+    assert.match(css, /\.unverified-warning/);
     for (const state of ["searching", "official_match", "reports_found", "not_verified"]) {
       assert.ok(css.includes(`[data-state=${state}]`), `Hook responds to ${state}`);
     }

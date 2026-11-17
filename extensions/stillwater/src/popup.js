@@ -4,6 +4,8 @@ import { DEFAULT_API_ORIGIN } from "./settings.js";
 
 const api = globalThis.browser || globalThis.chrome;
 const $ = id => document.getElementById(id);
+const initialParams = new URLSearchParams(location.hash.slice(1));
+if (initialParams.get("mode") === "inline" && document.body) document.body.dataset.mode = "inline";
 let origin = "", companies = [], nextOffset = null, directoryFilter = "", busy = false, companyBusy = false;
 let checkedRevision = 0;
 function status(id, message) { $(id).textContent = message; }
@@ -171,14 +173,14 @@ $("check-form").addEventListener("submit", async event => {
     await permission();
     if (revision !== checkedRevision) return;
     $("hook").dataset.state = result.outcome;
-    status("hook-caption", result.outcome === "official_match" ? "A listing match. Hook can rest a little." : result.outcome === "reports_found" ? "Pause. Hook found reports worth reviewing." : "Not sure yet. You still have a next step.");
+    status("hook-caption", result.outcome === "official_match" ? "A listed contact, not a guarantee. Take your time." : result.outcome === "reports_found" ? "Pause. Hook found reports worth reviewing." : "Red means pause—not proof of a scam.");
     showResult($("result"), result, company, async number => {
       try { await navigator.clipboard.writeText(number); status("error", "Listed number copied. Review the official source before calling."); }
       catch { status("error", `Copy is unavailable here. Select and copy this listed number: ${number}`); }
     });
   } catch (error) {
     $("result").replaceChildren(); $("result").hidden = true;
-    $("hook").dataset.state = "not_verified"; status("hook-caption", "No check completed. You can try another way.");
+    $("hook").dataset.state = "error"; status("hook-caption", "No check completed. You can try another way.");
     status("error", error.message || "The check failed. No number was verified.");
   } finally { $("consent").checked = false; busyState(false); }
 });
@@ -201,7 +203,7 @@ async function init() {
     $("api-origin").value = origin;
     status("destination", origin ? `Selected checks go to ${origin}.` : "No evidence service connected. Open Setup to begin.");
     if (!origin || !(await api.permissions.contains({ origins: [`${origin}/*`] }))) setup(true);
-    const initial = new URLSearchParams(location.hash.slice(1)).get("number");
+    const initial = initialParams.get("number");
     if (phoneCandidate(initial)) selected(initial);
     // Do not retain the selected number in extension history / address bar.
     if (location.hash) history.replaceState(null, "", location.pathname);

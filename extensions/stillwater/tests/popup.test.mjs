@@ -63,7 +63,7 @@ test("popup requires consent, uploads no browsing text, clears stale verdicts an
   $("phone").value = "+18002211212"; $("consent").checked = true;
   await $("check-form").fire("submit");
   assert.equal($("result").hidden, true);
-  assert.equal($("hook").dataset.state, "not_verified");
+  assert.equal($("hook").dataset.state, "error", "a failed check must not pretend an unverified result completed");
   assert.match($("error").textContent, /unavailable/);
   assert.equal($("check").disabled, false, "failure permits retry");
 
@@ -110,4 +110,15 @@ test("evidence and alternatives render as text with source links, not HTML or di
   assert.equal(nodes.some(n => n.href?.startsWith("tel:")), false);
   assert.ok(nodes.some(n => n.tagName === "a" && n.rel === "noopener noreferrer"));
   assert.ok(nodes.some(n => n.textContent === "Copy listed number"));
+});
+
+test("unverified evidence is emphasized without being mislabeled as a scam report", () => {
+  globalThis.document = documentMock();
+  const root = new FakeNode();
+  showResult(root, result({ outcome: "not_verified", label: "Not verified",
+    reason: "NO_EVIDENCE", evidence: [], freshness: "unknown" }), null, () => {});
+  assert.equal(root.className, "not_verified");
+  assert.ok(root.children.some(n => n.tagName === "strong" &&
+    n.className === "unverified-warning" && n.textContent === "Pause before calling."));
+  assert.ok(root.children.some(n => n.textContent.includes("not proof of a scam")));
 });

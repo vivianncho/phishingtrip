@@ -4,15 +4,16 @@
   const api = globalThis.browser || globalThis.chrome;
   const root = document.createElement("div");
   root.id = "stillwater-inline-root";
-  root.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:2147483647;";
+  root.style.cssText = "position:fixed;right:12px;top:12px;bottom:12px;width:min(390px,calc(100vw - 24px));z-index:2147483647;";
   const shadow = root.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
   style.textContent = `
     :host{all:initial}button{font:600 14px system-ui;min-height:48px;border:1px solid #d5f995;border-radius:24px;padding:10px 16px;background:#07313f;color:#d5f995;cursor:pointer}
     button:focus-visible{outline:3px solid #d5f995;outline-offset:3px}
-    .tools{display:flex;gap:8px;justify-content:flex-end}.close{border-color:#85b8ad;color:#edf7ed}
-    iframe{display:block;width:min(390px,calc(100vw - 24px));height:min(680px,calc(100dvh - 100px));border:1px solid #d5f995;border-radius:20px;margin-top:8px;background:#07313f;box-shadow:0 8px 40px #021f3088}
-    p{font:13px system-ui;color:#edf7ed;background:#174854;padding:10px;border-radius:10px;max-width:290px}
+    .tools{display:flex;gap:8px;justify-content:flex-end}.tools>button:first-child{flex:1}.close{border-color:#85b8ad;color:#edf7ed}
+    iframe{display:block;width:100%;height:max(180px,calc(100dvh - 158px));border:1px solid #59877f;border-radius:20px;margin-top:8px;background:#07313f;box-shadow:0 8px 40px #021f3088}
+    p{font:12px/1.4 system-ui;color:#edf7ed;background:#174854;padding:10px;border-radius:10px;margin:8px 0 0}
+    @media(max-height:420px){iframe{height:calc(100dvh - 84px)}p{display:none}}
   `;
   const tools = document.createElement("div"); tools.className = "tools";
   const check = document.createElement("button"); check.textContent = "Check selected number";
@@ -32,7 +33,7 @@
     frame = document.createElement("iframe");
     frame.title = "Phishing Trip selected-number check";
     frame.referrerPolicy = "no-referrer";
-    frame.src = `${api.runtime.getURL("popup.html")}#number=${encodeURIComponent(value)}`;
+    frame.src = `${api.runtime.getURL("popup.html")}#mode=inline&number=${encodeURIComponent(value)}`;
     frame.setAttribute("allow", "clipboard-write");
     shadow.append(frame);
     note.textContent = "Review the selected number and country in Phishing Trip. Only the final Check button sends it.";
@@ -64,5 +65,9 @@
   document.addEventListener("click", intercept, true);
   tools.append(check, close);
   shadow.append(style, tools, note); document.documentElement.append(root);
+  // Activation is explicit for this document. Opening the local panel does not
+  // grant consent to transmit the selected number or inspect the whole page.
+  update();
+  open(selected);
   return true;
 })();

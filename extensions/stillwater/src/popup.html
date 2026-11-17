@@ -19,32 +19,37 @@
         <button class="primary" type="submit">Save &amp; allow this service</button>
       </form>
       <p class="muted">The browser will request access to this service only. This does not grant ongoing access to search pages.</p>
-      <p class="muted">Safari: manage page access in the page menu → Manage Extensions, or Settings → Apps → Safari → Extensions → Stillwater. Deny website access or turn off the extension to revoke page access. Reload any page with the inline helper to remove it.</p>
+      <p class="muted">Safari: manage page access in the page menu → Manage Extensions, or Settings → Apps → Safari → Extensions → Phishing Trip. Deny website access or turn off the extension to revoke page access. Reload any page with the inline helper to remove it.</p>
       <button id="disconnect" type="button">Disconnect &amp; remove saved settings</button>
       <button id="availability" type="button">Check provider availability</button>
       <p id="availability-status" role="status">Availability has not been requested. Reports are not currently offered.</p>
       <p id="setup-status" role="status"></p>
     </section>
     <section aria-labelledby="main-heading">
-      <p class="eyebrow">One step at a time.</p>
-      <h1 id="main-heading">Before you call,<br><span>check the waters.</span></h1>
+      <div class="intro">
+      <div class="intro-copy">
+      <p class="eyebrow">Before you call</p>
+      <h1 id="main-heading">Under the<br>surface.<br><span>Not a guess.</span></h1>
+      </div>
       <div id="hook" class="fish" data-state="idle">
         <svg class="fish-art" viewBox="0 0 480 400" fill="none" role="img" aria-label="Hook, your fish companion">
-          <path d="M62 6v65c0 24-29 26-29 7v-9l9 9" stroke="#ff858b" stroke-width="3" stroke-linecap="round" />
           <image href="images/hook-figma-fins.svg" x="174" y="101" width="269.636" height="244.031" />
           <image href="images/hook-figma-body.svg" x="77.245" y="134.627" width="275.822" height="194.202" />
           <image href="images/hook-figma-face.svg" x="87" y="160.5" width="91.403" height="111.492" />
-          <g class="fish-eye-rest"><ellipse cx="143" cy="209" rx="32" ry="34" fill="#174854" /><path d="M122 209q21 17 42-2" stroke="#9dded0" stroke-width="3.5" stroke-linecap="round" /></g>
           <image class="fish-lantern" href="images/hook-figma-lantern.svg" x="40.904" y="44.917" width="160.632" height="125.966" />
-          <g class="fish-search-waves" stroke="#d5f995" stroke-width="2" stroke-linecap="round"><path d="M61 186q-14 24 0 48m-15-62q-23 37 0 76" /></g>
+          <g class="fish-lantern-color" transform="translate(40.904 44.917)">
+            <path class="lantern-color" d="M30.0955 60.0774C35.0955 50.0774 49.0955 47.0774 61.0955 52.0774C75.0955 58.0774 80.0955 75.0774 73.0955 88.0774C67.0955 100.077 49.0955 105.077 36.0955 97.0774C23.0955 90.0774 22.0955 73.0774 30.0955 60.0774Z" />
+            <path class="lantern-highlight" d="M36.0955 65.0774C39.0955 60.0774 46.0955 57.0774 51.0955 60.0774C54.0955 62.0774 52.0955 65.0774 48.0955 67.0774C43.0955 69.0774 42.0955 75.0774 38.0955 75.0774C34.0955 75.0774 33.0955 70.0774 36.0955 65.0774Z" />
+          </g>
         </svg>
         <p id="hook-caption">Hook is here with you.</p>
       </div>
-      <p>Search results and AI answers can be wrong. Check the number, not where it appears.</p>
+      </div>
+      <p class="intro-note">Hook looks for evidence. You get the reason, not just a verdict.</p>
       <div class="page-tools">
         <button id="selection" type="button">Use selected number</button>
         <button id="scan" type="button">Find numbers on this page</button>
-        <button id="inline" type="button">Check directly on this page</button>
+        <button id="inline" type="button">Turn on for this page</button>
       </div>
       <p id="page-status" class="muted" role="status">Page access happens only when you ask. No page text is sent.</p>
       <div id="candidates" class="candidates" aria-label="Phone numbers found locally"></div>
@@ -52,7 +57,12 @@
         <label for="phone">Number to check</label>
         <input id="phone" type="tel" inputmode="tel" placeholder="+1 800 221 1212" maxlength="64" autocomplete="off" required>
         <label for="country">Country you intend to call</label>
-        <input id="country" type="text" placeholder="US, GB, FR…" maxlength="2" pattern="[A-Za-z]{2}" autocomplete="off" autocapitalize="characters" required>
+        <select id="country" required>
+          <option value="">Choose a country</option>
+          <option value="US">United States (US)</option>
+          <option value="MX">Mexico (MX)</option>
+          <option value="CA">Canada (CA)</option>
+        </select>
         <p class="muted">Explicitly choose the number’s country. We never infer it from the page or your location. A + calling code takes precedence.</p>
         <details id="directory">
           <summary>Which travel company? <span class="muted">(optional)</span></summary>

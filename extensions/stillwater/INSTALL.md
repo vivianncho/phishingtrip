@@ -28,6 +28,41 @@ that operator; use only a Phishing Trip service you trust.
    `https://your-domain.example`, without `/api`), click **Save & allow this
    service**, and accept the origin-specific permission prompt.
 
+### Show the panel beside your search results
+
+1. Search normally in your browser. Open the pinned Phishing Trip extension.
+2. Choose **Turn on for this page**. A right-hand Phishing Trip panel opens
+   on this page only. It does not search the web for you or automatically
+   verify numbers in results or AI answers.
+3. Highlight one complete phone number in a result. Choose **Check [number]**
+   above the panel, or tap a phone link on the page.
+4. Review the selected number, choose United States, Mexico or Canada, and
+   optionally choose the company from the sourced directory.
+5. Give consent and choose **Check this number**. Only that action sends
+   the selected check to your connected evidence service.
+6. Read the sources. Green is an official listing match, not a safety
+   guarantee. Red means pause; an unverified number is not proven fraud.
+   A failed request has no evidence result and keeps Hook neutral.
+7. Close the panel with **×** to remove the helper. Reloading or navigating
+   away also removes it; turn it on again for each new search page.
+
+The panel floats above the right side of the page; it does not change the
+search engine's layout or replace its results. Some browser pages or site
+security rules block injected panels. Use the extension toolbar popup instead
+and paste the number when this happens.
+
+Hook uses the same approved four-layer lantern-fish artwork as the app, stays
+awake, and changes lantern color only after a completed check.
+
+### Private-service limitation
+
+The extension sends no login cookies or private access tokens. A private or
+password-gated deployment will not work as its evidence service. Do not put
+an administrative credential or a deployment bypass token in an extension
+package distributed to other people. A public extension needs an explicitly
+approved publicly reachable evidence API with the existing abuse controls;
+do not change deployment visibility merely to install this package.
+
 Developer mode is for local testing. Chrome Web Store / Edge Add-ons release
 needs a developer account, review, privacy disclosures, and a production API.
 No store submission has been made.

@@ -28,3 +28,31 @@ mtime_ms = 1794695639809
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:d2989347-2ac9-4d89-bae7-38ae2a5272e1/7bc2d85c-ecd1-4f33-bb88-872b498bdf4f/3bb8795e-3fe3-4009-a967-d6c571dde08a"
 storage_version_token = "1794695649044717"
 content_type = "text/html"
+
+[[outputs]]
+id = "xVnbdEiafZlAGSAEPXNx8"
+uri = "file://generated-artifacts/stillwater-extension/chromium.zip"
+type = "unspecified"
+title = "Phishing Trip — Chrome and Edge extension"
+description = "Local-test installation package with the approved Hook and right-hand panel. Extract the ZIP, then Load unpacked. Live checks require a publicly reachable evidence service; the current private deployment is not preconfigured."
+logical_id = "4fc229cc-4ea6-4bd4-8fc9-f6f64f1956f5"
+content_hash = "sha256:602acd79fe38adce51ab3932025b8190b654bd26725ccd03ba58b00a506dfbb1"
+size = 65939
+mtime_ms = 1794877583824
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:d2989347-2ac9-4d89-bae7-38ae2a5272e1/4fc229cc-4ea6-4bd4-8fc9-f6f64f1956f5/80d95b06-a662-48aa-97f4-6991fc11a5ae"
+storage_version_token = "1794877593473544"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "_BoF2-Jy3QKOMbrW8vhlh"
+uri = "file://generated-artifacts/stillwater-extension/safari.zip"
+type = "unspecified"
+title = "Phishing Trip — Safari extension resources"
+description = "Updated Safari web-extension resources, not an installable iPhone app. Requires Apple packaging, signing and device validation."
+logical_id = "00e59f17-d30f-48c0-a271-630c3719b2ea"
+content_hash = "sha256:38bafaa29b90f37fdd4841b1e5657a75e82589688338a24e9fa5a0c3256c9380"
+size = 65922
+mtime_ms = 1794877584244
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:d2989347-2ac9-4d89-bae7-38ae2a5272e1/00e59f17-d30f-48c0-a271-630c3719b2ea/73377533-329d-4df5-841f-aa5557dabd71"
+storage_version_token = "1794877593901526"
+content_type = "application/octet-stream"
