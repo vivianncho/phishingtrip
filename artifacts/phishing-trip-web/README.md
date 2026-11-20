@@ -4,6 +4,11 @@ A responsive browser application for the existing stateless travel-number API. T
 
 ## Run and publish
 
+For GitHub → Vercel deployment, use the repository-root `vercel.json` and
+follow [the Vercel setup guide](../../docs/vercel-deployment.md). It builds
+only this website at `/`, supports nested routes, and keeps live API calls
+explicitly unavailable until the separate public checking service is ready.
+
 Use the workspace's existing Website workflow. It supplies `PORT` and `BASE_PATH=/phishing-trip/` to Vite. The existing package commands are `dev`, `build`, `serve` and `typecheck`.
 
 The browser routes are:

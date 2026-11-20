@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "BASE_PATH=/ PORT=5173 pnpm --filter @workspace/phishing-trip-web run build",
+  "outputDirectory": "artifacts/phishing-trip-web/dist/public",
+  "routes": [
+    {
+      "src": "/api(?:/.*)?",
+      "dest": "/service-unavailable.json",
+      "status": 503,
+      "headers": {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json"
+      }
+    },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}
