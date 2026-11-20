@@ -2,6 +2,8 @@
 
 **Sleep with the phishes.**
 
+Made by **Vivian Cho** and **Esther Tran** for the **Replit x Cornell Tech hackathon**.
+
 A calmer way to check a travel phone number before calling. Phishing Trip
 helps anxious travelers compare numbers with available official-source
 evidence and find alternative contacts for airlines, hotels and other
